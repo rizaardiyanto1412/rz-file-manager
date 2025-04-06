@@ -163,9 +163,7 @@ export const FileManagerProvider = ({ children }) => {
    * @param {FileList} files Files to upload
    */
   const handleUploadFiles = async (files) => {
-    console.log('[Context] handleUploadFiles: Received files:', files); // Log input
     if (!files || files.length === 0) {
-      console.log('[Context] handleUploadFiles: No files to upload.');
       setError('No files selected for upload.');
       setTimeout(() => setError(null), 3000);
       closeUploadModal(); // Close modal even if no files selected
@@ -179,40 +177,30 @@ export const FileManagerProvider = ({ children }) => {
     let finalMessage = '';
 
     try {
-      console.log(`[Context] handleUploadFiles: Starting upload loop for ${files.length} files.`);
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        console.log(`[Context] handleUploadFiles: Uploading file ${i + 1}:`, file.name);
         const response = await uploadFile(currentPath, file);
-        console.log(`[Context] handleUploadFiles: Response for ${file.name}:`, response); // Log response
 
         if (!response.success) {
-          console.error(`[Context] handleUploadFiles: Failed to upload ${file.name}:`, response.message);
           setError(`Failed to upload ${file.name}: ${response.message || 'Unknown error'}`);
           setUploadError(response.message || 'An unknown error occurred.'); // Set the specific error message from the response
           overallSuccess = false; // Mark failure
           // Decide if you want to break or continue uploading others
           // break; // Uncomment to stop on first error
         } else {
-          console.log(`[Context] handleUploadFiles: Successfully uploaded ${file.name}`);
         }
       }
 
       if (overallSuccess) {
         finalMessage = files.length > 1 ? 'Files uploaded successfully' : 'File uploaded successfully';
-        console.log('[Context] handleUploadFiles: All uploads reported success.');
         setSuccessMessage(finalMessage);
       } else {
         // Error message was already set for the specific file(s)
-        console.log('[Context] handleUploadFiles: One or more uploads failed.');
       }
 
-      console.log('[Context] handleUploadFiles: Reloading items...');
       await loadItems(); // Reload items
-      console.log('[Context] handleUploadFiles: Finished reloading items.');
 
     } catch (err) {
-      console.error('[Context] handleUploadFiles: Error during upload process:', err); // Log caught error
       setError('Error uploading files: ' + (err.message || 'Unknown error'));
       setUploadError(err.message || 'A critical error occurred during upload.'); // Set error message from catch block
       overallSuccess = false; // Mark failure on catch
@@ -220,10 +208,8 @@ export const FileManagerProvider = ({ children }) => {
       setLoading(false);
       // Only close the modal automatically if ALL uploads were successful
       if (overallSuccess) {
-        console.log('[Context] handleUploadFiles: All uploads successful. Closing modal.');
         closeUploadModal();
       } else {
-        console.log('[Context] handleUploadFiles: Upload failed. Keeping modal open to show error.');
         // The error message is already set in the state and should be displayed by the modal
       }
     }
@@ -269,23 +255,18 @@ export const FileManagerProvider = ({ children }) => {
   const handleRenameItem = async (path, newName) => {
     setLoading(true);
     setError(null);
-    console.log('[FileManagerContext] handleRenameItem called:', { path, newName });
     
     try {
       const response = await renameItem(path, newName);
-      console.log('[FileManagerContext] API response for renameItem:', response);
       
       if (response.success) {
         setSuccessMessage(response.message || 'Item renamed successfully');
-        console.log('[FileManagerContext] Renaming successful, reloading items...');
         await loadItems();
       } else {
         setError(response.message || 'Failed to rename item');
-        console.error('[FileManagerContext] Renaming failed:', response.message);
       }
     } catch (err) {
       setError('Error renaming item: ' + (err.message || 'Unknown error'));
-      console.error('[FileManagerContext] Error in handleRenameItem:', err);
     } finally {
       setLoading(false);
     }
@@ -540,7 +521,6 @@ export const FileManagerProvider = ({ children }) => {
         throw new Error(response.message || 'Failed to load file content.');
       }
     } catch (err) {
-      console.error("Error loading file content:", err);
       setEditorState(prev => ({ ...prev, isLoading: false, error: err.message }));
       // Optionally, close the editor or show error within it
     }
@@ -572,7 +552,6 @@ export const FileManagerProvider = ({ children }) => {
         throw new Error(response.message || 'Failed to save file content.');
       }
     } catch (err) {
-      console.error("Error saving file content:", err);
       setEditorState(prev => ({ ...prev, isLoading: false, error: err.message }));
       // Keep editor open to show error
     }

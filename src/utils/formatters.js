@@ -42,7 +42,6 @@ export const formatDate = (timestamp) => {
             minute: '2-digit' 
         });
     } catch (e) {
-        console.error("Error formatting date:", e);
         return 'Error'; // Return error indication
     }
 };

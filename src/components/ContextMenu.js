@@ -40,7 +40,6 @@ const ContextMenu = () => {
   };
 
   const handleRename = () => {
-    console.log('Rename clicked for:', contextMenu.item.name);
     if (contextMenu.item) {
       openRenameModal(contextMenu.item);
     }
@@ -48,7 +47,6 @@ const ContextMenu = () => {
   };
 
   const handleDelete = () => {
-    console.log('Delete clicked for:', contextMenu.item?.name); // Optional chaining for safety
     // Currently opens a generic delete modal. Could be enhanced to pass the item.
     openDeleteModal();
     hideContextMenu();

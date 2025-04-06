@@ -25,7 +25,7 @@ const Toolbar = ({ onCreateFolder, onUpload, onDelete }) => {
   const {
     selectedItems,
     navigateToParent,
-    reloadItems,
+    loadItems,
     currentPath,
   } = useFileManager();
 
@@ -33,7 +33,7 @@ const Toolbar = ({ onCreateFolder, onUpload, onDelete }) => {
    * Handle refresh button click
    */
   const handleRefresh = () => {
-    reloadItems();
+    loadItems();
   };
 
   /**

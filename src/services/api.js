@@ -40,7 +40,6 @@ export const fetchFiles = async (path = '') => {
 
   } catch (error) {
     // Log the more specific error
-    console.error('Error in fetchFiles (standard fetch):', error);
     // Return a consistent error structure
     return { success: false, message: error.message };
   }
@@ -62,7 +61,6 @@ export const createFolder = async (path, name) => {
     });
     return response;
   } catch (error) {
-    console.error('Error creating folder:', error);
     return { success: false, message: error.message };
   }
 };
@@ -75,7 +73,6 @@ export const createFolder = async (path, name) => {
  * @return {Promise<Object>} API response
  */
 export const uploadFile = async (path, file) => {
-  console.log('[API] uploadFile: Called with path:', path, 'and file:', file);
   try {
     // Create form data
     const formData = new FormData();
@@ -83,7 +80,6 @@ export const uploadFile = async (path, file) => {
     // Use 'current_path' to match the backend parameter name more explicitly
     formData.append('current_path', path);
     
-    console.log('[API] uploadFile: FormData prepared with keys:', ...formData.keys()); // Log keys
 
     // Define API_BASE_PATH if not already globally available (adjust if needed)
     const API_BASE_PATH = 'rz-file-manager/v1';
@@ -96,7 +92,6 @@ export const uploadFile = async (path, file) => {
 
     // Construct the final URL ensuring only one slash before 'upload'
     const uploadUrl = `${baseUrl}/upload`;
-    console.log('[API] uploadFile: Constructed URL:', uploadUrl); // Log the final URL
 
     const response = await fetch(uploadUrl, {
       method: 'POST',
@@ -107,12 +102,9 @@ export const uploadFile = async (path, file) => {
       body: formData,
     });
 
-    console.log('[API] uploadFile: Raw response status:', response.status);
     const data = await response.json();
-    console.log('[API] uploadFile: Parsed response data:', data);
     return data;
   } catch (error) {
-    console.error('[API] uploadFile: Fetch error:', error); // Log fetch error
     // Check if the response object exists in the error (e.g., for network errors vs HTTP errors)
     let message = 'Network error during upload';
     if (error.response) {
@@ -145,7 +137,6 @@ export const deleteItem = async (path) => {
     });
     return response;
   } catch (error) {
-    console.error('Error deleting item:', error);
     return { success: false, message: error.message };
   }
 };
@@ -167,7 +158,6 @@ export const renameItem = async (path, newName) => {
     });
     return response;
   } catch (error) {
-    console.error('Error renaming item:', error);
     return { success: false, message: error.message };
   }
 };
@@ -188,7 +178,6 @@ export const copyItem = async (source, destination) => {
     });
     return response;
   } catch (error) {
-    console.error('Error copying item:', error);
     return { success: false, message: error.message };
   }
 };
@@ -209,7 +198,6 @@ export const moveItem = async (source, destination) => {
     });
     return response;
   } catch (error) {
-    console.error('Error moving item:', error);
     return { success: false, message: error.message };
   }
 };
@@ -231,7 +219,6 @@ export const getFileContent = async (pathParam) => {
     });
     return response;
   } catch (error) {
-    console.error('Error getting file content:', error);
     return { success: false, message: error.message };
   }
 };
@@ -252,7 +239,6 @@ export const saveFileContent = async (path, content) => {
     });
     return response;
   } catch (error) {
-    console.error('Error saving file content:', error);
     return { success: false, message: error.message };
   }
 };
