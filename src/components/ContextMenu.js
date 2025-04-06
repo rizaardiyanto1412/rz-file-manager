@@ -47,8 +47,10 @@ const ContextMenu = () => {
   };
 
   const handleDelete = () => {
-    // Currently opens a generic delete modal. Could be enhanced to pass the item.
-    openDeleteModal();
+    // Pass the specific item from the context menu to openDeleteModal
+    if (contextMenu.item) {
+      openDeleteModal(contextMenu.item); 
+    }
     hideContextMenu();
   };
 

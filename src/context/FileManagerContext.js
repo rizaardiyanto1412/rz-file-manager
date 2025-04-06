@@ -71,7 +71,7 @@ export const FileManagerProvider = ({ children }) => {
   const [createFolderModalState, setCreateFolderModalState] = useState({ isOpen: false });
 
   // State for Delete Confirmation Modal
-  const [deleteModalState, setDeleteModalState] = useState({ isOpen: false });
+  const [deleteModalState, setDeleteModalState] = useState({ isOpen: false, itemToDelete: null });
 
   // State for Upload Modal
   const [uploadModalState, setUploadModalState] = useState({ isOpen: false });
@@ -216,9 +216,9 @@ export const FileManagerProvider = ({ children }) => {
   };
 
   /**
-   * Delete selected items
+   * Delete SELECTED items
    */
-  const handleDeleteItems = async () => {
+  const handleDeleteSelectedItems = async () => {
     if (selectedItems.length === 0) return;
     
     setLoading(true);
@@ -241,6 +241,32 @@ export const FileManagerProvider = ({ children }) => {
       await loadItems();
     } catch (err) {
       setError('Error deleting items: ' + (err.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Delete a SINGLE item
+   */
+  const handleDeleteItem = async () => {
+    if (!deleteModalState.itemToDelete) return; // Safety check
+
+    const item = deleteModalState.itemToDelete;
+    setLoading(true);
+    setError(null);
+    closeDeleteModal(); // Close modal immediately
+
+    try {
+      const response = await deleteItem(item.path); // Call API with the specific path
+      if (response.success) {
+        setSuccessMessage(response.message || 'Item deleted successfully');
+        await loadItems(); // Reload
+      } else {
+        setError(`Failed to delete ${item.name}: ${response.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      setError('Error deleting item: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -432,17 +458,18 @@ export const FileManagerProvider = ({ children }) => {
 
   /**
    * Open the delete confirmation modal.
+   *
+   * @param {Object} item The item to delete.
    */
-  const openDeleteModal = () => {
-    // We might enhance this later to pass the items to be deleted
-    setDeleteModalState({ isOpen: true });
+  const openDeleteModal = (item) => {
+    setDeleteModalState({ isOpen: true, itemToDelete: item });
   };
 
   /**
    * Close the delete confirmation modal.
    */
   const closeDeleteModal = () => {
-    setDeleteModalState({ isOpen: false });
+    setDeleteModalState({ isOpen: false, itemToDelete: null });
   };
 
   /**
@@ -580,8 +607,8 @@ export const FileManagerProvider = ({ children }) => {
     loadItems, // Maybe useful for manual refresh?
     handleCreateFolder,
     handleUploadFiles,
-    handleDeleteItems,
-    handleRenameItem,
+    handleDeleteSelectedItems, // Keep the handler for toolbar delete
+    handleDeleteItem, // Provide the handler for single item delete
     // Navigation
     navigateTo,
     navigateToParent,
@@ -612,9 +639,9 @@ export const FileManagerProvider = ({ children }) => {
     createFolderModalState,
     openCreateFolderModal,
     closeCreateFolderModal,
-    deleteModalState,
-    openDeleteModal,
-    closeDeleteModal,
+    deleteModalState, // Provide the modified state
+    openDeleteModal, // Provide the modified opener
+    closeDeleteModal, // Provide the modified closer
     uploadModalState,
     openUploadModal,
     closeUploadModal,
@@ -632,7 +659,7 @@ export const FileManagerProvider = ({ children }) => {
     editorState,
     renameModalState,
     createFolderModalState,
-    deleteModalState,
+    deleteModalState, // Add dependency
     uploadModalState,
   ]);
 
