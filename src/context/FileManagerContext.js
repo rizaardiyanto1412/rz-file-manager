@@ -293,26 +293,32 @@ export const FileManagerProvider = ({ children }) => {
     setSuccessMessage(null);
   };
 
-  // Function to show the context menu
-  const showContextMenu = useCallback((item, event) => {
-    event.preventDefault();
-    // Use pageX/pageY for positioning relative to the document
+  /**
+   * Show the context menu at the specified position.
+   *
+   * @param {Object} item The item that was right-clicked.
+   * @param {Event} event The contextmenu event object.
+   */
+  const showContextMenu = (item, event) => {
     setContextMenu({
       visible: true,
-      x: event.pageX, 
+      x: event.pageX,
       y: event.pageY,
       item: item,
     });
-  }, []);
+    console.log('Context Menu Event - Captured Coords:', { clientX: event.clientX, clientY: event.clientY, pageX: event.pageX, pageY: event.pageY });
+  };
 
-  // Function to hide the context menu
-  const hideContextMenu = useCallback(() => {
-    if (contextMenu.visible) {
-      setContextMenu({ ...contextMenu, visible: false, item: null });
-    }
-  }, [contextMenu]);
+  /**
+   * Hide the context menu.
+   */
+  const hideContextMenu = () => {
+    setContextMenu(prev => ({ ...prev, visible: false, item: null }));
+  };
 
-  // Load items when current path changes
+  /**
+   * Load items when current path changes
+   */
   useEffect(() => {
     loadItems();
   }, [currentPath, sortKey, sortDirection]);

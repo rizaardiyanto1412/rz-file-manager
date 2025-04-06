@@ -96,6 +96,7 @@ This checklist outlines the complete development plan for creating a modern Word
   - [x] CreateFolderModal
   - [x] RenameModal
   - [x] DeleteConfirmationModal
+  - [x] FileEditorModal
   - [ ] FilePropertiesModal
   - [ ] (Optional) FilePreviewModal
 
@@ -107,9 +108,10 @@ This checklist outlines the complete development plan for creating a modern Word
   - [x] Error handling and user feedback
 
 - [ ] (Optional) Implement file editor
+  - [x] Basic file editor modal implementation
   - [ ] Integrate code editor (Monaco, CodeMirror)
   - [ ] Syntax highlighting
-  - [ ] Save functionality
+  - [x] Save functionality (basic textarea)
 
 ## API Integration
 
@@ -123,7 +125,7 @@ This checklist outlines the complete development plan for creating a modern Word
   - [x] Load directory contents
   - [x] Implement file operations
   - [x] Handle uploads and downloads
-  - [ ] Implement file editing
+  - [x] Implement file editing
 
 ## Styling and UX
 
@@ -188,7 +190,7 @@ This checklist outlines the complete development plan for creating a modern Word
 ## Development Progress
 
 - [x] Backend implementation: 100%
-- [x] Frontend implementation: 80%
+- [x] Frontend implementation: 85%
 - [ ] Testing and optimization: 0%
 - [x] Documentation: 50%
-- [ ] Overall completion: 70%
+- [ ] Overall completion: 75%

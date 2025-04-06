@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useContext } from 'react';
+import { createPortal } from 'react-dom';
 import { useFileManager } from '../context/FileManagerContext';
 import { __ } from '@wordpress/i18n';
 
@@ -62,8 +63,9 @@ const ContextMenu = () => {
     // Add basic styling (background, border, padding) via CSS later
   };
 
-  return (
+  const menuContent = (
     <div ref={menuRef} className="rz-file-manager-context-menu" style={menuStyle}>
+      {console.log("Context Menu Applied Style:", menuStyle)}
       <ul>
         {contextMenu.item.type === 'file' && (
           <li>
@@ -84,6 +86,12 @@ const ContextMenu = () => {
         </li>
       </ul>
     </div>
+  );
+
+  // Use createPortal to render the menu at the body level
+  return createPortal(
+    menuContent,
+    document.body // Append to the body
   );
 };
 
