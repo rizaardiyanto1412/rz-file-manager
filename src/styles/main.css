@@ -1,0 +1,213 @@
+/**
+ * RZ File Manager Styles
+ *
+ * This file contains the styles for the RZ File Manager plugin.
+ */
+
+/* Main container */
+.rz-file-manager {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 20px 0;
+  padding: 20px;
+}
+
+/* Messages */
+.rz-file-manager__error,
+.rz-file-manager__success {
+  border-radius: 4px;
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  position: relative;
+}
+
+.rz-file-manager__error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.rz-file-manager__success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.rz-file-manager__error button,
+.rz-file-manager__success button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
+/* Toolbar */
+.rz-file-manager__toolbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.rz-file-manager__toolbar-left,
+.rz-file-manager__toolbar-right {
+  display: flex;
+  gap: 10px;
+}
+
+/* Breadcrumbs */
+.rz-file-manager__breadcrumbs {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+}
+
+.rz-file-manager__breadcrumbs-item {
+  color: #0073aa;
+  text-decoration: none;
+}
+
+.rz-file-manager__breadcrumbs-item:hover {
+  text-decoration: underline;
+}
+
+.rz-file-manager__breadcrumbs-separator {
+  color: #999;
+  margin: 0 5px;
+}
+
+/* Loading */
+.rz-file-manager__loading {
+  align-items: center;
+  display: flex;
+  height: 200px;
+  justify-content: center;
+}
+
+/* Empty folder */
+.rz-file-manager__empty {
+  align-items: center;
+  background-color: #f9f9f9;
+  border: 1px dashed #ddd;
+  border-radius: 4px;
+  display: flex;
+  height: 150px;
+  justify-content: center;
+  text-align: center;
+}
+
+/* File list */
+.rz-file-manager__file-list {
+  margin-bottom: 20px;
+}
+
+.rz-file-manager__table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.rz-file-manager__table th,
+.rz-file-manager__table td {
+  border-bottom: 1px solid #eee;
+  padding: 10px;
+  text-align: left;
+}
+
+.rz-file-manager__table th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+}
+
+.rz-file-manager__table-checkbox {
+  width: 40px;
+}
+
+.rz-file-manager__table-size,
+.rz-file-manager__table-modified {
+  width: 150px;
+}
+
+.rz-file-manager__table-actions {
+  text-align: right;
+  width: 200px;
+}
+
+.rz-file-manager__table-actions .button {
+  margin-left: 5px;
+}
+
+/* File item */
+.rz-file-manager__file-item {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.rz-file-manager__file-item:hover {
+  background-color: #f9f9f9;
+}
+
+.rz-file-manager__file-item.is-selected {
+  background-color: #f0f6fc;
+}
+
+.rz-file-manager__file-icon {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Modals */
+.rz-file-manager__modal .components-modal__content {
+  padding: 20px;
+}
+
+.rz-file-manager__modal-content {
+  margin-bottom: 20px;
+}
+
+.rz-file-manager__modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.rz-file-manager__modal-error {
+  color: #d63638;
+  margin-top: 10px;
+}
+
+.rz-file-manager__delete-list {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 10px 15px;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+  .rz-file-manager__toolbar {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .rz-file-manager__table-size,
+  .rz-file-manager__table-modified {
+    display: none;
+  }
+  
+  .rz-file-manager__table-actions {
+    width: auto;
+  }
+}
