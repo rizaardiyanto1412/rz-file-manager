@@ -21,7 +21,15 @@ import FileItem from './FileItem';
  */
 const FileList = ({ onRename }) => {
   // Get state and methods from context
-  const { items, currentPath, sortKey, sortDirection, setSort } = useFileManager();
+  const { 
+    items, 
+    sortKey, 
+    sortDirection, 
+    setSort,
+    toggleSelectAll,      // <-- Get function from context
+    areAllItemsSelected,  // <-- Get state from context
+    selectedItems       // <-- Get selectedItems to disable if none visible
+  } = useFileManager();
 
   // If there are no items, show a message
   if (items.length === 0) {
@@ -54,7 +62,14 @@ const FileList = ({ onRename }) => {
         <thead className="rz-file-manager__table-head">
           <tr onClick={(e) => e.stopPropagation()}> {/* Prevent triggering row clicks */} 
             <th className="rz-file-manager__table-checkbox">
-              <span className="screen-reader-text">{__('Select', 'rz-file-manager')}</span>
+              {/* Add Select All Checkbox */}
+              <input
+                type="checkbox"
+                aria-label={__('Select all items', 'rz-file-manager')}
+                checked={areAllItemsSelected} // <-- Use state from context
+                onChange={toggleSelectAll}    // <-- Use function from context
+                disabled={items.length === 0} // <-- Disable if no items
+              />
             </th>
             <th className="rz-file-manager__table-name" onClick={() => handleSort('name')}>
               {__('Name', 'rz-file-manager')}

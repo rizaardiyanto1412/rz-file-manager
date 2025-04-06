@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { createContext, useState, useContext, useEffect, useCallback } from '@wordpress/element';
+import { createContext, useState, useContext, useEffect, useCallback, useMemo } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -256,17 +256,58 @@ export const FileManagerProvider = ({ children }) => {
    * 
    * @param {Object} item Item to select/deselect
    */
-  const toggleSelectItem = (item) => {
-    setSelectedItems(prevSelected => {
-      const isSelected = prevSelected.some(selected => selected.path === item.path);
-      
+  const toggleSelectItem = useCallback((item, event) => {
+    const isShiftPressed = event.shiftKey;
+    const isCtrlCmdPressed = event.ctrlKey || event.metaKey;
+    const isSelected = selectedItems.some(selected => selected.path === item.path);
+    
+    let newSelectedItems = [...selectedItems];
+    
+    if (isShiftPressed && selectedItems.length > 0) {
+      // This logic needs the full `items` array to find the range
+      const lastSelectedItem = selectedItems[selectedItems.length - 1];
+      const lastSelectedIndex = items.findIndex(i => i.path === lastSelectedItem.path);
+      const currentItemIndex = items.findIndex(i => i.path === item.path);
+ 
+      const start = Math.min(lastSelectedIndex, currentItemIndex);
+      const end = Math.max(lastSelectedIndex, currentItemIndex);
+ 
+      // Select items within the range, excluding the already handled current item
+      const rangeItems = items.slice(start, end + 1).filter(i => i.path !== item.path);
+      newSelectedItems = [...newSelectedItems, ...rangeItems];
+    } else if (isCtrlCmdPressed) {
+      // Ctrl/Cmd toggles the specific item without affecting others
       if (isSelected) {
-        return prevSelected.filter(selected => selected.path !== item.path);
+        newSelectedItems = newSelectedItems.filter(i => i.path !== item.path);
       } else {
-        return [...prevSelected, item];
+        newSelectedItems = [...newSelectedItems, item];
       }
-    });
-  };
+    } else {
+      // Standard click (no modifier or shift on empty selection)
+      // If it's already selected, deselect it. Otherwise, select only this one.
+      if (isSelected) {
+        newSelectedItems = newSelectedItems.filter(i => i.path !== item.path);
+      } else {
+        newSelectedItems = [item]; // Select only the clicked item
+      }
+    }
+    
+    setSelectedItems(newSelectedItems);
+  }, [items, selectedItems]); // Depend on items for shift select range calculation
+
+  /**
+   * Toggle select all items
+   */
+  const toggleSelectAll = useCallback(() => {
+    // Check if all current items are already selected
+    const allSelected = items.length > 0 && selectedItems.length === items.length;
+
+    if (allSelected) {
+      setSelectedItems([]); // Deselect all
+    } else {
+      setSelectedItems([...items]); // Select all
+    }
+  }, [items, selectedItems]);
 
   /**
    * Check if an item is selected
@@ -418,10 +459,10 @@ export const FileManagerProvider = ({ children }) => {
     setEditorState(prev => ({ ...prev, content: newContent }));
   };
 
-  // Context value
-  const value = {
+  // Memoized context value
+  const value = useMemo(() => ({
     currentPath,
-    items,
+    items, // The actual items array
     selectedItems,
     loading,
     error,
@@ -429,14 +470,9 @@ export const FileManagerProvider = ({ children }) => {
     navigateTo,
     navigateToParent,
     toggleSelectItem,
+    toggleSelectAll, // Expose the new function
+    areAllItemsSelected: items.length > 0 && selectedItems.length === items.length, // Derived state
     isItemSelected,
-    clearSelection,
-    clearMessages,
-    handleCreateFolder,
-    handleUploadFiles,
-    handleDeleteItems,
-    handleRenameItem,
-    reloadItems: loadItems,
     sortKey,
     sortDirection,
     setSort,
@@ -448,7 +484,7 @@ export const FileManagerProvider = ({ children }) => {
     closeFileEditor,
     saveEditedFile,
     handleEditorContentChange,
-  };
+  }), [currentPath, items, selectedItems, loading, error, successMessage, sortKey, sortDirection, contextMenu, editorState]);
 
   return (
     <FileManagerContext.Provider value={value}>
