@@ -44,6 +44,9 @@ const FileManager = () => {
     openDeleteModal,
     closeDeleteModal,
     hideContextMenu,
+    uploadModalState,
+    openUploadModal,
+    closeUploadModal,
   } = useFileManager();
 
   // Click handler to close context menu
@@ -72,6 +75,7 @@ const FileManager = () => {
       <Toolbar 
         onCreateFolder={openCreateFolderModal}
         onDelete={openDeleteModal}
+        onUpload={openUploadModal}
       />
 
       {/* Breadcrumbs */}
@@ -106,6 +110,13 @@ const FileManager = () => {
         <DeleteConfirmationModal
           isOpen={deleteModalState.isOpen}
           onClose={closeDeleteModal}
+        />
+      )}
+
+      {uploadModalState.isOpen && (
+        <UploadModal
+          isOpen={uploadModalState.isOpen}
+          onClose={closeUploadModal}
         />
       )}
 

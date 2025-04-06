@@ -102,10 +102,10 @@ class RZ_File_Manager_REST_API {
             '/upload',
             array(
                 'methods'             => WP_REST_Server::CREATABLE,
-                'callback'            => array($this, 'upload_file'),
+                'callback'            => array($this, 'handle_upload_file'),
                 'permission_callback' => array($this, 'check_permissions'),
                 'args'                => array(
-                    'path' => array(
+                    'current_path' => array( // <-- Change 'path' to 'current_path'
                         'required'          => true,
                         'sanitize_callback' => 'sanitize_text_field',
                     ),
@@ -382,39 +382,79 @@ class RZ_File_Manager_REST_API {
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_REST_Response|WP_Error Response object or WP_Error.
      */
-    public function upload_file($request) {
-        // Get path parameter
-        $path = $request->get_param('path');
-        
-        // Check if files were uploaded
-        if (empty($_FILES['file'])) {
-            return new WP_Error(
-                'no_file',
-                __('No file was uploaded.', 'rz-file-manager'),
-                array('status' => 400)
-            );
+    public function handle_upload_file($request) {
+        $current_path = $request->get_param('current_path'); // <-- Change 'path' to 'current_path'
+        error_log('[PHP REST API] handle_upload_file: Received request.'); // Log entry
+        error_log('[PHP REST API] handle_upload_file: current_path = ' . print_r($current_path, true)); // Log path
+        error_log('[PHP REST API] handle_upload_file: $_FILES = ' . print_r($_FILES, true)); // Log FILES array
+
+        // Basic validation
+        if (!isset($_FILES['file'])) { // Key 'file' must match FormData key
+             error_log('[PHP REST API] handle_upload_file: Error - $_FILES["file"] not set.');
+             return new WP_REST_Response(['success' => false, 'message' => 'No file data received.'], 400);
         }
-        
-        // Upload file
-        $result = $this->filesystem->upload_file($path, $_FILES['file']);
-        
-        // Check for errors
-        if (is_wp_error($result)) {
-            return new WP_Error(
-                $result->get_error_code(),
-                $result->get_error_message(),
-                array('status' => 400)
-            );
+
+        // Check for upload errors
+        if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+             error_log('[PHP REST API] handle_upload_file: Error - Upload error code: ' . $_FILES['file']['error']);
+             return new WP_REST_Response(['success' => false, 'message' => $this->get_upload_error_message($_FILES['file']['error'])], 400);
         }
-        
-        // Return success response
-        return new WP_REST_Response(
-            array(
-                'success' => true,
-                'message' => __('File uploaded successfully.', 'rz-file-manager'),
-            ),
-            201
-        );
+
+        $file = $_FILES['file']; // Process the single file
+
+        try {
+            // Assume $this->filesystem is an instance of your Filesystem class
+            error_log('[PHP REST API] handle_upload_file: Calling filesystem->upload_file...');
+            $result = $this->filesystem->upload_file($current_path, $file);
+            error_log('[PHP REST API] handle_upload_file: Filesystem result: ' . print_r($result, true)); // Log filesystem result
+
+            // Check if the filesystem operation returned exactly true
+            if ($result === true) {
+                // Filesystem class returned true, assume success, provide generic message
+                return new WP_REST_Response(['success' => true, 'message' => 'File uploaded successfully.'], 200);
+            } else {
+                // Handle WP_Error specifically
+                if (is_wp_error($result)) {
+                    $message = $result->get_error_message(); // Get the specific error message
+                    error_log('[PHP REST API] handle_upload_file: Upload failed (WP_Error). Message: ' . $message);
+                } else {
+                    // Handle other failures (e.g., if filesystem returned false)
+                    $message = is_array($result) && isset($result['message']) ? $result['message'] : 'Failed to upload file (filesystem operation failed).';
+                    error_log('[PHP REST API] handle_upload_file: Upload failed (Non-WP_Error). Filesystem result: ' . print_r($result, true));
+                }
+                return new WP_REST_Response(['success' => false, 'message' => $message], 500); // Return specific or generic message
+            }
+        } catch (Exception $e) {
+            error_log('[PHP REST API] handle_upload_file: Exception caught: ' . $e->getMessage()); // Log exception
+            return new WP_REST_Response(['success' => false, 'message' => 'Server error during upload: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Helper function to translate upload error codes
+     *
+     * @param int $error_code The PHP upload error code.
+     * @return string The error message.
+     */
+    private function get_upload_error_message($error_code) {
+        switch ($error_code) {
+            case UPLOAD_ERR_INI_SIZE:
+                return 'The uploaded file exceeds the upload_max_filesize directive in php.ini.';
+            case UPLOAD_ERR_FORM_SIZE:
+                return 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.';
+            case UPLOAD_ERR_PARTIAL:
+                return 'The uploaded file was only partially uploaded.';
+            case UPLOAD_ERR_NO_FILE:
+                return 'No file was uploaded.';
+            case UPLOAD_ERR_NO_TMP_DIR:
+                return 'Missing a temporary folder.';
+            case UPLOAD_ERR_CANT_WRITE:
+                return 'Failed to write file to disk.';
+            case UPLOAD_ERR_EXTENSION:
+                return 'A PHP extension stopped the file upload.';
+            default:
+                return 'Unknown upload error.';
+        }
     }
 
     /**

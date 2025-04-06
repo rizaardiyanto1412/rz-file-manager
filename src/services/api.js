@@ -75,27 +75,58 @@ export const createFolder = async (path, name) => {
  * @return {Promise<Object>} API response
  */
 export const uploadFile = async (path, file) => {
+  console.log('[API] uploadFile: Called with path:', path, 'and file:', file);
   try {
     // Create form data
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('path', path);
+    // Use 'current_path' to match the backend parameter name more explicitly
+    formData.append('current_path', path);
     
-    // Construct the full URL for fetch, as apiFetch doesn't handle FormData well
-    const uploadUrl = `${window.rzFileManagerData?.restUrl || '/wp-json' + API_BASE_PATH}/upload`;
+    console.log('[API] uploadFile: FormData prepared with keys:', ...formData.keys()); // Log keys
+
+    // Define API_BASE_PATH if not already globally available (adjust if needed)
+    const API_BASE_PATH = 'rz-file-manager/v1';
+
+    // Determine the base URL, ensuring it doesn't end with a slash
+    let baseUrl = window.rzFileManagerData?.restUrl || `/wp-json/${API_BASE_PATH}`;
+    if (baseUrl.endsWith('/')) {
+      baseUrl = baseUrl.slice(0, -1); // Remove trailing slash if present
+    }
+
+    // Construct the final URL ensuring only one slash before 'upload'
+    const uploadUrl = `${baseUrl}/upload`;
+    console.log('[API] uploadFile: Constructed URL:', uploadUrl); // Log the final URL
+
     const response = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
-        'X-WP-Nonce': window.rzFileManagerData?.restNonce, // Use the REST nonce
+        // Ensure you're using the correct nonce if localized
+        'X-WP-Nonce': window.rzFileManagerData?.nonce || window.rzFileManagerData?.restNonce,
       },
       body: formData,
     });
-    
+
+    console.log('[API] uploadFile: Raw response status:', response.status);
     const data = await response.json();
+    console.log('[API] uploadFile: Parsed response data:', data);
     return data;
   } catch (error) {
-    console.error('Error uploading file:', error);
-    return { success: false, message: error.message };
+    console.error('[API] uploadFile: Fetch error:', error); // Log fetch error
+    // Check if the response object exists in the error (e.g., for network errors vs HTTP errors)
+    let message = 'Network error during upload';
+    if (error.response) {
+        // Try to get message from potential JSON error response
+        try {
+            const errorData = await error.response.json();
+            message = errorData.message || error.response.statusText;
+        } catch (parseError) {
+            message = error.response.statusText;
+        }
+    } else if (error.message) {
+         message = error.message;
+    }
+    return { success: false, message };
   }
 };
 

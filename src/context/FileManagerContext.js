@@ -73,6 +73,12 @@ export const FileManagerProvider = ({ children }) => {
   // State for Delete Confirmation Modal
   const [deleteModalState, setDeleteModalState] = useState({ isOpen: false });
 
+  // State for Upload Modal
+  const [uploadModalState, setUploadModalState] = useState({ isOpen: false });
+
+  // State for Upload Error
+  const [uploadError, setUploadError] = useState(null);
+
   /**
    * Load files and folders for the current path
    */
@@ -157,28 +163,69 @@ export const FileManagerProvider = ({ children }) => {
    * @param {FileList} files Files to upload
    */
   const handleUploadFiles = async (files) => {
+    console.log('[Context] handleUploadFiles: Received files:', files); // Log input
+    if (!files || files.length === 0) {
+      console.log('[Context] handleUploadFiles: No files to upload.');
+      setError('No files selected for upload.');
+      setTimeout(() => setError(null), 3000);
+      closeUploadModal(); // Close modal even if no files selected
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    
+    setUploadError(null); // Clear previous errors on new upload attempt
+    let overallSuccess = true; // Track overall success
+    let finalMessage = '';
+
     try {
-      // Upload each file
+      console.log(`[Context] handleUploadFiles: Starting upload loop for ${files.length} files.`);
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        console.log(`[Context] handleUploadFiles: Uploading file ${i + 1}:`, file.name);
         const response = await uploadFile(currentPath, file);
-        
+        console.log(`[Context] handleUploadFiles: Response for ${file.name}:`, response); // Log response
+
         if (!response.success) {
+          console.error(`[Context] handleUploadFiles: Failed to upload ${file.name}:`, response.message);
           setError(`Failed to upload ${file.name}: ${response.message || 'Unknown error'}`);
-          break;
+          setUploadError(response.message || 'An unknown error occurred.'); // Set the specific error message from the response
+          overallSuccess = false; // Mark failure
+          // Decide if you want to break or continue uploading others
+          // break; // Uncomment to stop on first error
+        } else {
+          console.log(`[Context] handleUploadFiles: Successfully uploaded ${file.name}`);
         }
       }
-      
-      setSuccessMessage('Files uploaded successfully');
-      // Reload items to show the new files
-      await loadItems();
+
+      if (overallSuccess) {
+        finalMessage = files.length > 1 ? 'Files uploaded successfully' : 'File uploaded successfully';
+        console.log('[Context] handleUploadFiles: All uploads reported success.');
+        setSuccessMessage(finalMessage);
+      } else {
+        // Error message was already set for the specific file(s)
+        console.log('[Context] handleUploadFiles: One or more uploads failed.');
+      }
+
+      console.log('[Context] handleUploadFiles: Reloading items...');
+      await loadItems(); // Reload items
+      console.log('[Context] handleUploadFiles: Finished reloading items.');
+
     } catch (err) {
+      console.error('[Context] handleUploadFiles: Error during upload process:', err); // Log caught error
       setError('Error uploading files: ' + (err.message || 'Unknown error'));
+      setUploadError(err.message || 'A critical error occurred during upload.'); // Set error message from catch block
+      overallSuccess = false; // Mark failure on catch
     } finally {
       setLoading(false);
+      // Only close the modal automatically if ALL uploads were successful
+      if (overallSuccess) {
+        console.log('[Context] handleUploadFiles: All uploads successful. Closing modal.');
+        closeUploadModal();
+      } else {
+        console.log('[Context] handleUploadFiles: Upload failed. Keeping modal open to show error.');
+        // The error message is already set in the state and should be displayed by the modal
+      }
     }
   };
 
@@ -418,6 +465,27 @@ export const FileManagerProvider = ({ children }) => {
   };
 
   /**
+   * Open the upload modal.
+   */
+  const openUploadModal = useCallback(() => {
+    setUploadModalState({ isOpen: true });
+  }, []);
+
+  /**
+   * Close the upload modal.
+   */
+  const closeUploadModal = useCallback(() => {
+    setUploadModalState({ isOpen: false });
+  }, []);
+
+  /**
+   * Clear upload error
+   */
+  const clearUploadError = useCallback(() => {
+    setUploadError(null);
+  }, []);
+
+  /**
    * Load items when current path changes
    */
   useEffect(() => {
@@ -527,6 +595,8 @@ export const FileManagerProvider = ({ children }) => {
     loading,
     error,
     successMessage,
+    uploadError, // Provide uploadError state
+    clearUploadError, // Add the clear function
     // Core actions
     loadItems, // Maybe useful for manual refresh?
     handleCreateFolder,
@@ -566,6 +636,9 @@ export const FileManagerProvider = ({ children }) => {
     deleteModalState,
     openDeleteModal,
     closeDeleteModal,
+    uploadModalState,
+    openUploadModal,
+    closeUploadModal,
   }), [
     currentPath,
     items,
@@ -573,6 +646,7 @@ export const FileManagerProvider = ({ children }) => {
     loading,
     error,
     successMessage,
+    uploadError, // Add uploadError to dependency array
     sortKey,
     sortDirection,
     contextMenu,
@@ -580,6 +654,7 @@ export const FileManagerProvider = ({ children }) => {
     renameModalState,
     createFolderModalState,
     deleteModalState,
+    uploadModalState,
   ]);
 
   return (

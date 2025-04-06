@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { useState, useRef } from '@wordpress/element';
+import { useState, useRef, useContext, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Modal, Button, ProgressBar } from '@wordpress/components';
 
@@ -22,7 +22,7 @@ import { useFileManager } from '../../context/FileManagerContext';
  */
 const UploadModal = ({ isOpen, onClose }) => {
   // Get state and methods from context
-  const { currentPath, handleUploadFiles } = useFileManager();
+  const { currentPath, handleUploadFiles, uploadError, clearUploadError } = useFileManager();
   
   // Reference to file input
   const fileInputRef = useRef(null);
@@ -36,6 +36,13 @@ const UploadModal = ({ isOpen, onClose }) => {
   // State for upload errors
   const [errors, setErrors] = useState({});
 
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedFiles([]);
+      clearUploadError();
+    }
+  }, [isOpen, clearUploadError]);
+
   /**
    * Handle file selection
    * 
@@ -48,6 +55,7 @@ const UploadModal = ({ isOpen, onClose }) => {
     // Reset progress and errors
     setUploadProgress({});
     setErrors({});
+    clearUploadError();
   };
 
   /**
@@ -107,12 +115,22 @@ const UploadModal = ({ isOpen, onClose }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const handleClose = () => {
+    clearUploadError();
+    onClose();
+  };
+
   return (
     <Modal
       title={__('Upload Files', 'rz-file-manager')}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
       className="rz-file-manager__modal rz-file-manager__upload-modal"
     >
+      {uploadError && (
+        <div className="rz-fm-upload-error">
+          Error: {uploadError}
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
         <div className="rz-file-manager__modal-content">
           <p>
@@ -179,7 +197,7 @@ const UploadModal = ({ isOpen, onClose }) => {
         <div className="rz-file-manager__modal-footer">
           <Button
             variant="secondary"
-            onClick={onClose}
+            onClick={handleClose}
           >
             {__('Cancel', 'rz-file-manager')}
           </Button>
