@@ -697,14 +697,15 @@ export const FileManagerProvider = ({ children }) => {
   /**
    * Handler for unzipping an item.
    * @param {string} path The relative path of the zip file to unzip.
+   * @param {boolean} [unzipHere=false] Optional. If true, unzip directly into the current directory. Defaults to false (unzip into a new folder).
    */
-  const handleUnzipItem = useCallback(async (path) => {
-      console.log('Attempting to unzip:', path);
+  const handleUnzipItem = useCallback(async (path, unzipHere = false) => { 
+      console.log(`Attempting to unzip: ${path}, Unzip Here: ${unzipHere}`); 
       setLoading(true);
       setError(null);
       setSuccessMessage(null); // Clear previous success message
       try {
-          await unzipItem(path);
+          await unzipItem(path, unzipHere); 
           // Refresh the list to show the extracted contents
           await loadItems(currentPath);
           setSuccessMessage('Archive extracted successfully.'); // Set success message AFTER refresh

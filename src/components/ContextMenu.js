@@ -125,6 +125,17 @@ const ContextMenu = () => {
     hideContextMenu();
   };
 
+  const handleUnzipHere = () => {
+    if (contextMenu.item && contextMenu.item.name.toLowerCase().endsWith('.zip') && contextMenu.item.type === 'file') {
+      console.log('Unzip Here clicked for:', contextMenu.item.path);
+      // Calling the context handler we modified earlier
+      handleUnzipItem(contextMenu.item.path, true); // Passing 'true' to indicate unzip here
+    } else {
+      console.warn('Unzip Here called with invalid selection', contextMenu.item);
+    }
+    hideContextMenu();
+  };
+
   const handleCopy = () => {
     const itemsToCopy = getItemsForAction(selectedItems, contextMenu.item);
     handleCopyItems(itemsToCopy);
@@ -173,16 +184,24 @@ const ContextMenu = () => {
         {contextMenu.item.type === 'file' && (
           <li>
             <button onClick={handleZip}>
-              <span className="dashicons dashicons-archive" style={{ marginRight: '5px' }}></span> Zip
+              <span className="dashicons dashicons-archive" style={{ marginRight: '5px' }}></span> {__('Compress to .zip', 'rz-file-manager')}
             </button>
           </li>
         )}
         {contextMenu.item.name.toLowerCase().endsWith('.zip') && contextMenu.item.type === 'file' && (
-          <li>
-            <button onClick={handleUnzip}>
-              <span className="dashicons dashicons-unlock" style={{ marginRight: '5px' }}></span> Unzip
-            </button>
-          </li>
+          <>
+            <li>
+              <button onClick={handleUnzip}>
+                <span className="dashicons dashicons-unlock" style={{ marginRight: '5px' }}></span> 
+                {`Extract to folder "${contextMenu.item.name.replace(/\.zip$/i, '')}"`}
+              </button>
+            </li>
+            <li>
+              <button onClick={handleUnzipHere}>
+                <span className="dashicons dashicons-unlock" style={{ marginRight: '5px' }}></span> Extract here
+              </button>
+            </li>
+          </>
         )}
         {contextMenu.item && ( // Only show copy/cut/delete if an item was clicked
           <>

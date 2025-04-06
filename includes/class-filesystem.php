@@ -649,7 +649,7 @@ class RZ_File_Manager_Filesystem {
     }
 
     /**
-     * Creates a zip archive of a given file or folder.
+     * Create a zip archive of a given file or folder.
      *
      * @param string $relative_path Relative path from the root directory to the item to zip.
      * @return bool|WP_Error True on success, WP_Error on failure.
@@ -682,12 +682,15 @@ class RZ_File_Manager_Filesystem {
     }
 
     /**
-     * Extracts a zip archive into a new directory named after the archive.
+     * Extracts a zip archive.
+     * By default, extracts into a new directory named after the archive.
+     * If $unzip_here is true, extracts directly into the parent directory.
      *
      * @param string $relative_zip_path Relative path from the root directory to the zip file.
+     * @param bool $unzip_here Whether to extract directly into the parent directory.
      * @return bool|WP_Error True on success, WP_Error on failure.
      */
-    public function extract_zip($relative_zip_path) {
+    public function extract_zip($relative_zip_path, $unzip_here = false) {
          $absolute_zip_path = $this->validate_path($relative_zip_path);
 
          if (!$absolute_zip_path || !$this->filesystem->exists($absolute_zip_path) || !$this->filesystem->is_file($absolute_zip_path)) {
@@ -706,19 +709,26 @@ class RZ_File_Manager_Filesystem {
          // Determine destination directory
          $path_parts = pathinfo($absolute_zip_path);
          $parent_dir = $path_parts['dirname'];
-         $archive_basename = $path_parts['filename']; // Name without extension
-         $destination_dir = trailingslashit($parent_dir) . $archive_basename;
 
-         // Prevent extracting into itself (though unlikely with current naming)
-         if ($destination_dir === $absolute_zip_path) {
-              return new WP_Error('unzip_self_recursion', __('Cannot extract an archive into itself.', 'rz-file-manager'));
-         }
-         
-         // Check if a file/folder with the target extraction name already exists
-         if ($this->filesystem->exists($destination_dir)) {
-             // Decide on behavior: error out, rename (e.g., folder-1), or overwrite? 
-             // Erroring out is safest for now.
-             return new WP_Error('unzip_destination_exists', __('A file or folder with the target extraction name already exists.', 'rz-file-manager'), ['target' => $destination_dir]);
+         if ($unzip_here) {
+             $destination_dir = $parent_dir;
+             // Note: When unzipping here, we rely on the underlying archive handler
+             // to manage potential file conflicts/overwrites within the existing directory.
+         } else {
+             $archive_basename = $path_parts['filename']; // Name without extension
+             $destination_dir = trailingslashit($parent_dir) . $archive_basename;
+
+             // Prevent extracting into itself (though unlikely with current naming)
+             if ($destination_dir === $absolute_zip_path) {
+                  return new WP_Error('unzip_self_recursion', __('Cannot extract an archive into itself.', 'rz-file-manager'));
+             }
+             
+             // Check if a file/folder with the target *new* directory name already exists
+             if ($this->filesystem->exists($destination_dir)) {
+                 // Decide on behavior: error out, rename (e.g., folder-1), or overwrite? 
+                 // Erroring out is safest for now.
+                 return new WP_Error('unzip_destination_exists', __('A file or folder with the target extraction name already exists.', 'rz-file-manager'), ['target' => $destination_dir]);
+             }
          }
          
          return $this->archive_handler->unzip_item($absolute_zip_path, $destination_dir);

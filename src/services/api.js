@@ -322,9 +322,10 @@ export const zipItem = async (path) => {
  * Unzip an archive
  * 
  * @param {string} path Path to the archive
+ * @param {boolean} [unzipHere=false] Optional. If true, unzip directly into the current directory.
  * @return {Promise<Object>} API response
  */
-export const unzipItem = async (path) => {
+export const unzipItem = async (path, unzipHere = false) => {
   const url = `${window.rzFileManagerData?.restUrl}unzip`;
   try {
     const response = await fetch(url, {
@@ -333,7 +334,7 @@ export const unzipItem = async (path) => {
         'Content-Type': 'application/json',
         'X-WP-Nonce': window.rzFileManagerData?.restNonce,
       },
-      body: JSON.stringify({ path }),
+      body: JSON.stringify({ path, unzipHere }),
     });
 
     const data = await response.json();

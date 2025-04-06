@@ -296,6 +296,10 @@ class RZ_File_Manager_REST_API {
                         'required'          => true,
                         'sanitize_callback' => 'sanitize_text_field',
                     ),
+                    'unzipHere' => array(
+                        'required'          => false,
+                        'default'           => false,
+                    ),
                 ),
             )
         );
@@ -963,9 +967,11 @@ class RZ_File_Manager_REST_API {
      */
     public function handle_unzip_request(WP_REST_Request $request) {
         $path = $request->get_param('path');
-        
-        // Use the filesystem method to extract the zip
-        $result = $this->filesystem->extract_zip($path);
+        $unzip_here = $request->get_param('unzipHere') ?? false;
+        $unzip_here = filter_var($unzip_here, FILTER_VALIDATE_BOOLEAN);
+
+        // Use the filesystem method to extract the zip, passing the unzip_here flag
+        $result = $this->filesystem->extract_zip($path, $unzip_here);
 
         if (is_wp_error($result)) {
             // Determine appropriate status code based on error
