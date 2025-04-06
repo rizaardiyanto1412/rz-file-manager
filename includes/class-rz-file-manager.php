@@ -30,6 +30,7 @@ class RZ_File_Manager {
     public function __construct() {
         // This constructor is intentionally left empty.
         // Initialization happens in the init() method.
+        error_log('[RZ_FM RZ_File_Manager->__construct] Initializing main class.');
     }
 
     /**
@@ -51,14 +52,15 @@ class RZ_File_Manager {
      * @return void
      */
     private function load_dependencies() {
+        error_log('[RZ_FM RZ_File_Manager->load_dependencies] Loading dependencies.');
         // Load admin class
         require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-admin.php';
         
-        // Load REST API class
-        require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-rest-api.php';
-        
-        // Load filesystem class
+        // Load filesystem class (Needs to be before REST API)
         require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-filesystem.php';
+        
+        // Load REST API class (Depends on Filesystem)
+        require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-rest-api.php';
         
         // Load assets class
         require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-assets.php';
@@ -70,6 +72,7 @@ class RZ_File_Manager {
      * @return void
      */
     private function register_hooks() {
+        error_log('[RZ_FM RZ_File_Manager->register_hooks] Registering hooks.');
         // Initialize admin
         $admin = new RZ_File_Manager_Admin();
         

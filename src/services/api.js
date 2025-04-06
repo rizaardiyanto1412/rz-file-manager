@@ -18,14 +18,14 @@ export const fetchFiles = async (path = '') => {
   try {
 
     // Construct the full URL for the standard fetch call
-    const listUrl = `${window.rzFileManager?.restUrl}list`; // Note: restUrl already includes the base path and slash
+    const listUrl = `${window.rzFileManagerData?.restUrl}list`; // Note: restUrl already includes the base path and slash
 
     // --- Using standard fetch instead ---
     const response = await fetch(`${listUrl}?path=${encodeURIComponent(path)}`, {
       method: 'GET',
       credentials: 'include', // Send cookies
       headers: {
-        'X-WP-Nonce': window.rzFileManager?.nonce,
+        'X-WP-Nonce': window.rzFileManagerData?.restNonce, // Use the REST nonce
         'Content-Type': 'application/json' // Though GET usually doesn't need this, good practice
       },
     });
@@ -82,11 +82,11 @@ export const uploadFile = async (path, file) => {
     formData.append('path', path);
     
     // Construct the full URL for fetch, as apiFetch doesn't handle FormData well
-    const uploadUrl = `${window.rzFileManager?.restUrl || '/wp-json' + API_BASE_PATH}/upload`;
+    const uploadUrl = `${window.rzFileManagerData?.restUrl || '/wp-json' + API_BASE_PATH}/upload`;
     const response = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
-        'X-WP-Nonce': window.rzFileManager?.nonce,
+        'X-WP-Nonce': window.rzFileManagerData?.restNonce, // Use the REST nonce
       },
       body: formData,
     });
@@ -227,13 +227,45 @@ export const saveFileContent = async (path, content) => {
 };
 
 /**
+ * Get the direct download URL for a file.
+ * 
+ * @param {string} path File path.
+ * @return {string} The download URL.
+ */
+export const getDownloadUrl = (path) => {
+  // Construct the URL for the admin-ajax.php endpoint
+  const ajaxUrl = window.rzFileManagerData?.ajaxUrl;
+  const nonce = window.rzFileManagerData?.ajaxNonce; // Use the specific AJAX nonce
+  
+  // Append necessary parameters for the AJAX handler
+  // Path is passed directly, PHP handler will validate
+  return `${ajaxUrl}?action=rz_fm_download_item&path=${path}&_wpnonce=${nonce}`;
+};
+
+/**
+ * Get the download URL for a zipped directory.
+ * 
+ * @param {string} path Directory path.
+ * @return {string} The zip download URL.
+ */
+export const getZipDownloadUrl = (path) => {
+  // Construct the URL for the admin-ajax.php endpoint
+  const ajaxUrl = window.rzFileManagerData?.ajaxUrl;
+  const nonce = window.rzFileManagerData?.ajaxNonce; // Use the specific AJAX nonce
+
+  // Append necessary parameters for the AJAX handler
+  // Path is passed directly, PHP handler will validate
+  return `${ajaxUrl}?action=rz_fm_download_zip&path=${path}&_wpnonce=${nonce}`;
+};
+
+/**
  * Get download URL for a file
  * 
  * @param {string} path File path
  * @return {string} Download URL
  */
-export const getDownloadUrl = (path) => {
+export const getDownloadUrlLegacy = (path) => {
   // Construct the full URL for download link
-  const downloadUrlBase = window.rzFileManager?.restUrl || '/wp-json' + API_BASE_PATH;
-  return `${downloadUrlBase}/download?path=${encodeURIComponent(path)}&_wpnonce=${window.rzFileManager?.nonce}`;
+  const downloadUrlBase = window.rzFileManagerData?.restUrl || '/wp-json' + API_BASE_PATH;
+  return `${downloadUrlBase}/download?path=${encodeURIComponent(path)}&_wpnonce=${window.rzFileManagerData?.restNonce}`; // Use restNonce
 };

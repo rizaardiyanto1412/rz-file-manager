@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import { useFileManager } from '../context/FileManagerContext';
 import { __ } from '@wordpress/i18n';
+import { getDownloadUrl, getZipDownloadUrl } from '../services/api'; // Import download URL functions
 
 const ContextMenu = () => {
   const { contextMenu, hideContextMenu, openFileEditor, openRenameModal, openDeleteModal } = useFileManager();
@@ -53,6 +54,25 @@ const ContextMenu = () => {
     hideContextMenu();
   };
 
+  const handleDownload = () => {
+    if (!contextMenu.item) return;
+
+    let downloadUrl;
+    if (contextMenu.item.type === 'file') {
+      downloadUrl = getDownloadUrl(contextMenu.item.path);
+    } else if (contextMenu.item.type === 'directory') {
+      // Assuming a backend endpoint /download-zip?path=...
+      downloadUrl = getZipDownloadUrl(contextMenu.item.path);
+    }
+
+    if (downloadUrl) {
+      // Trigger download by navigating
+      window.location.href = downloadUrl;
+    }
+
+    hideContextMenu(); // Close menu after action
+  };
+
   const menuStyle = {
     position: 'absolute',
     top: `${contextMenu.y}px`,
@@ -71,6 +91,11 @@ const ContextMenu = () => {
             </button>
           </li>
         )}
+        <li>
+          <button onClick={handleDownload}>
+            <span className="dashicons dashicons-download" style={{ marginRight: '5px' }}></span> {__('Download', 'rz-file-manager')}
+          </button>
+        </li>
         <li>
           <button onClick={handleRename}>
             <span className="dashicons dashicons-edit" style={{ marginRight: '5px' }}></span> Rename

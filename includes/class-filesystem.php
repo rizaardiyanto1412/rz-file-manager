@@ -37,6 +37,7 @@ class RZ_File_Manager_Filesystem {
      * @param string|null $root_path The root path to use. If null, reads from options or defaults to uploads.
      */
     public function __construct($root_path = null) {
+        error_log('[RZ_FM Filesystem->__construct] BEGIN - Received root path: ' . $root_path);
         // Initialize WordPress Filesystem
         $this->initialize_filesystem();
         
@@ -48,6 +49,7 @@ class RZ_File_Manager_Filesystem {
             $options = get_option('rz_file_manager_options', array());
             $this->root_path = isset($options['root_path']) ? $options['root_path'] : wp_upload_dir()['basedir'];
         }
+        error_log('[RZ_FM Filesystem->__construct] END - Normalized root path: ' . $this->root_path);
     }
 
     /**
@@ -65,9 +67,11 @@ class RZ_File_Manager_Filesystem {
         if (WP_Filesystem()) {
             global $wp_filesystem;
             $this->filesystem = $wp_filesystem;
+            error_log('[RZ_FM Filesystem->__construct] WP_Filesystem() initialized successfully.');
             return true;
         }
 
+        error_log('[RZ_FM Filesystem->__construct] ERROR - WP_Filesystem() failed to initialize.');
         return false;
     }
 
@@ -78,6 +82,8 @@ class RZ_File_Manager_Filesystem {
      * @return string|bool Normalized path or false if invalid.
      */
     private function validate_path($path) {
+        error_log('[RZ_FM Filesystem->validate_path] Validating path: ' . $path);
+        error_log('[RZ_FM Filesystem->validate_path] Root path: ' . $this->root_path);
         // Normalize path separators
         $path = str_replace('\\', '/', $path);
         $path = str_replace('\\', '/', $path);
@@ -88,12 +94,16 @@ class RZ_File_Manager_Filesystem {
         // Get absolute path
         $absolute_path = $this->root_path . '/' . ltrim($path, '/');
         $real_path = realpath($absolute_path);
+        error_log('[RZ_FM Filesystem->validate_path] Calculated absolute path: ' . $absolute_path);
+        error_log('[RZ_FM Filesystem->validate_path] Calculated real path: ' . ($real_path ? $real_path : 'false'));
         
         // Check if path is within root directory
         if ($real_path === false || strpos($real_path, realpath($this->root_path)) !== 0) {
-            return false;
+            error_log('[RZ_FM Filesystem->validate_path] FAILED - Path is outside root directory or does not exist.');
+            return new WP_Error('invalid_path', __('Invalid path or path traversal attempt detected.', 'rz-file-manager'), ['status' => 400]);
         }
         
+        error_log('[RZ_FM Filesystem->validate_path] SUCCESS - Returning: ' . $absolute_path);
         return $absolute_path;
     }
 
@@ -492,5 +502,178 @@ class RZ_File_Manager_Filesystem {
             : 'jpg,jpeg,png,gif,pdf,doc,docx,ppt,pptx,xls,xlsx,zip,txt,md';
         
         return array_map('trim', explode(',', $allowed_types_string));
+    }
+
+    /**
+     * Send a file to the browser for download.
+     *
+     * @param string $path Relative path to the file.
+     * @return void|WP_Error Outputs file or returns WP_Error on failure.
+     */
+    public function download_file($path) {
+        error_log('[RZ_FM Filesystem->download_file] BEGIN - Received path: ' . $path);
+        $absolute_path = $this->validate_path($path);
+
+        if (is_wp_error($absolute_path)) {
+            error_log('[RZ_FM Filesystem->download_file] ERROR - Path validation failed: ' . $absolute_path->get_error_message());
+            return $absolute_path;
+        }
+        error_log('[RZ_FM Filesystem->download_file] Validated absolute path: ' . $absolute_path);
+
+        if (!$this->filesystem->exists($absolute_path)) {
+            error_log('[RZ_FM Filesystem->download_file] ERROR - File does not exist: ' . $absolute_path);
+            return new WP_Error('not_found', __('File not found.', 'rz-file-manager'), ['status' => 404]);
+        }
+
+        if (!$this->filesystem->is_file($absolute_path)) {
+            error_log('[RZ_FM Filesystem->download_file] ERROR - Path is not a file: ' . $absolute_path);
+            return new WP_Error('not_a_file', __('The specified path is not a file.', 'rz-file-manager'), ['status' => 400]);
+        }
+        error_log('[RZ_FM Filesystem->download_file] File checks passed. Preparing headers.');
+
+        $filename = basename($absolute_path);
+        $filesize = $this->filesystem->size($absolute_path);
+        $filetype = wp_check_filetype($filename);
+        $mime_type = $filetype['type'] ? $filetype['type'] : 'application/octet-stream';
+
+        // Prevent caching
+        header('Cache-Control: private');
+        header('Pragma: private');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+
+        // Set headers for download
+        header('Content-Description: File Transfer');
+        header('Content-Type: ' . $mime_type);
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Transfer-Encoding: binary');
+        header('Content-Length: ' . $filesize);
+        header('Connection: close');
+
+        // Clear output buffer
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // Output the file
+        error_log('[RZ_FM Filesystem->download_file] Reading file: ' . $absolute_path);
+        readfile($absolute_path);
+
+        // Terminate script execution
+        error_log('[RZ_FM Filesystem->download_file] Exiting after readfile.');
+        exit;
+    }
+
+    /**
+     * Create a zip archive of a directory and send it for download.
+     *
+     * @param string $path Relative path to the directory.
+     * @return void|WP_Error Outputs zip file or returns WP_Error on failure.
+     */
+    public function download_directory_as_zip($path) {
+        error_log('[RZ_FM Filesystem->download_directory_as_zip] BEGIN - Received path: ' . $path);
+        if (!class_exists('ZipArchive')) {
+            error_log('[RZ_FM Filesystem->download_directory_as_zip] ERROR - ZipArchive class not available.');
+            return new WP_Error('zip_not_supported', __('ZipArchive class is not available on this server.', 'rz-file-manager'), ['status' => 501]);
+        }
+
+        $absolute_path = $this->validate_path($path);
+
+        if (is_wp_error($absolute_path)) {
+            error_log('[RZ_FM Filesystem->download_directory_as_zip] ERROR - Path validation failed: ' . $absolute_path->get_error_message());
+            return $absolute_path;
+        }
+        error_log('[RZ_FM Filesystem->download_directory_as_zip] Validated absolute path: ' . $absolute_path);
+
+        if (!$this->filesystem->exists($absolute_path)) {
+            error_log('[RZ_FM Filesystem->download_directory_as_zip] ERROR - Directory does not exist: ' . $absolute_path);
+            return new WP_Error('not_found', __('Directory not found.', 'rz-file-manager'), ['status' => 404]);
+        }
+
+        if (!$this->filesystem->is_dir($absolute_path)) {
+            error_log('[RZ_FM Filesystem->download_directory_as_zip] ERROR - Path is not a directory: ' . $absolute_path);
+            return new WP_Error('not_a_directory', __('The specified path is not a directory.', 'rz-file-manager'), ['status' => 400]);
+        }
+        error_log('[RZ_FM Filesystem->download_directory_as_zip] Directory checks passed. Creating zip.');
+
+        $directory_name = basename($absolute_path);
+        $zip_filename = sanitize_file_name($directory_name . '.zip');
+        // Create temporary zip file in uploads dir
+        $temp_dir = trailingslashit(get_temp_dir());
+        $zip_temp_path = $temp_dir . wp_unique_filename($temp_dir, $zip_filename);
+
+        $zip = new ZipArchive();
+        $result = $zip->open($zip_temp_path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        error_log('[RZ_FM Filesystem->download_directory_as_zip] Zip open result: ' . $result . ' for path: ' . $zip_temp_path);
+        if ($result !== TRUE) {
+            return new WP_Error('zip_create_failed', __('Could not create the zip archive.', 'rz-file-manager') . ' Error code: ' . $result, ['status' => 500]);
+        }
+
+        // Add files recursively
+        error_log('[RZ_FM Filesystem->download_directory_as_zip] Adding files to zip from source: ' . $source_path);
+        $source_path = realpath($absolute_path);
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($source_path, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($files as $file) {
+            $file_path = realpath($file->getPathname());
+            // Create relative path for the zip archive
+            $relative_path = substr($file_path, strlen($source_path) + 1);
+
+            if (empty($relative_path)) continue; // Skip the root dir itself if listed
+
+            if ($file->isDir()) {
+                // Recursively copy subdirectory
+                $zip->addEmptyDir($relative_path);
+            } else if ($file->isFile()) {
+                // Copy file
+                $zip->addFile($file_path, $relative_path);
+            }
+        }
+
+        // Check if files were added (might be empty dir)
+        if ($zip->numFiles === 0) {
+             // Add the base directory itself if it was empty
+            $zip->addEmptyDir($directory_name);
+        }
+
+        $zip->close();
+
+        if (!$this->filesystem->exists($zip_temp_path) || !$this->filesystem->is_readable($zip_temp_path)) {
+            error_log('[RZ_FM Filesystem->download_directory_as_zip] ERROR - Could not read created zip file: ' . $zip_temp_path);
+            $this->filesystem->delete($zip_temp_path); // Attempt cleanup
+            return new WP_Error('zip_read_failed', __('Could not read the created zip archive.', 'rz-file-manager'), ['status' => 500]);
+        }
+        error_log('[RZ_FM Filesystem->download_directory_as_zip] Zip created successfully. Preparing headers.');
+
+        $filesize = $this->filesystem->size($zip_temp_path);
+
+        // Set headers for download
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . $zip_filename . '"');
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . $filesize);
+
+        // Clear output buffer
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // Output the file
+        error_log('[RZ_FM Filesystem->download_directory_as_zip] Reading zip file: ' . $zip_temp_path);
+        readfile($zip_temp_path);
+
+        // Clean up the temporary file
+        error_log('[RZ_FM Filesystem->download_directory_as_zip] Deleting temporary zip file: ' . $zip_temp_path);
+        $this->filesystem->delete($zip_temp_path);
+
+        // Terminate script execution
+        error_log('[RZ_FM Filesystem->download_directory_as_zip] Exiting after readfile.');
+        exit;
     }
 }

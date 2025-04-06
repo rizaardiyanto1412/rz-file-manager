@@ -66,10 +66,12 @@ class RZ_File_Manager_Assets {
         // Localize script with necessary data
         wp_localize_script(
             'rz-file-manager-scripts',
-            'rzFileManager',
+            'rzFileManagerData',
             array(
                 'restUrl' => esc_url_raw(rest_url('rz-file-manager/v1/')),
-                'nonce' => wp_create_nonce('wp_rest'),
+                'ajaxUrl'  => admin_url('admin-ajax.php'),
+                'ajaxNonce' => wp_create_nonce('rz_fm_nonce'),
+                'restNonce' => wp_create_nonce('wp_rest'),
                 'rootPath' => $this->get_root_path(),
                 'maxUploadSize' => wp_max_upload_size(),
                 'allowedFileTypes' => $this->get_allowed_file_types(),
