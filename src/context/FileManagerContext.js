@@ -288,8 +288,8 @@ export const FileManagerProvider = ({ children }) => {
       const start = Math.min(lastSelectedIndex, currentItemIndex);
       const end = Math.max(lastSelectedIndex, currentItemIndex);
  
-      // Select items within the range, excluding the already handled current item
-      const rangeItems = items.slice(start, end + 1).filter(i => i.path !== item.path);
+      // Select items within the range
+      const rangeItems = items.slice(start, end + 1);
       newSelectedItems = [...newSelectedItems, ...rangeItems];
     } else if (isCtrlCmdPressed) {
       // Ctrl/Cmd toggles the specific item without affecting others
@@ -300,11 +300,11 @@ export const FileManagerProvider = ({ children }) => {
       }
     } else {
       // Standard click (no modifier or shift on empty selection)
-      // If it's already selected, deselect it. Otherwise, select only this one.
+      // If it's already selected, deselect it. Otherwise, add it to the selection.
       if (isSelected) {
         newSelectedItems = newSelectedItems.filter(i => i.path !== item.path);
       } else {
-        newSelectedItems = [item]; // Select only the clicked item
+        newSelectedItems = [...newSelectedItems, item]; // Add the clicked item
       }
     }
     

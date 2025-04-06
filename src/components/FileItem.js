@@ -69,17 +69,6 @@ const FileItem = ({ item, onRename }) => {
   };
 
   /**
-   * Handle checkbox change
-   * 
-   * @param {Event} event Change event
-   */
-  const handleCheckboxChange = (event) => {
-    event.stopPropagation();
-    // Only toggle selection when the checkbox itself is changed
-    toggleSelectItem(item);
-  };
-
-  /**
    * Handle rename button click
    * 
    * @param {Event} event Click event
@@ -155,7 +144,7 @@ const FileItem = ({ item, onRename }) => {
           checked={isItemSelected(item)}
           onChange={(e) => {
             e.stopPropagation(); // Prevent row click when clicking checkbox
-            handleCheckboxChange(e);
+            toggleSelectItem(item, e);
           }}
           aria-label={`Select ${item.name}`}
         />
