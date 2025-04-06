@@ -1,11 +1,13 @@
 <?php
 /**
  * Plugin Name: RZ File Manager
- * Plugin URI: https://example.com/rz-file-manager
+ * Plugin URI: https://rizamaulana.com
  * Description: A modern file manager for WordPress with a React-based interface.
  * Version: 1.0.0
- * Author: RZ
- * Author URI: https://example.com
+ * Author: Riza
+ * Author URI: https://rizamaulana.com
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: rz-file-manager
  * Domain Path: /languages
  * Requires at least: 5.8

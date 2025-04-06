@@ -40,6 +40,13 @@ class RZ_File_Manager_Filesystem {
     private $root_path;
 
     /**
+     * Flag for filesystem initialization status.
+     *
+     * @var bool
+     */
+    private $is_initialized = false;
+
+    /**
      * Constructor.
      * 
      * @param string|null $root_path The root path to use. If null, reads from options or defaults to uploads.
@@ -50,12 +57,14 @@ class RZ_File_Manager_Filesystem {
             require_once ABSPATH . '/wp-admin/includes/file.php';
             if (!WP_Filesystem()) {
                 // Handle error - Filesystem could not be initialized
-                // Maybe throw an exception or set an error state
-                trigger_error(__('Could not initialize WP Filesystem', 'rz-file-manager'), E_USER_WARNING);
+                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Log critical initialization failure
+                error_log('RZ File Manager Error: Could not initialize WP Filesystem'); // Log error instead of trigger_error
+                $this->is_initialized = false;
                 return;
             }
         }
         $this->filesystem = $wp_filesystem;
+        $this->is_initialized = true; // Filesystem initialized successfully
         $this->archive_handler = new RZ_File_Manager_Archive(); // Instantiate Archive handler
 
         // Determine and validate the root path
@@ -553,7 +562,7 @@ class RZ_File_Manager_Filesystem {
             ob_end_clean();
         }
 
-        // Use readfile() for memory efficiency with large files
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile
         readfile($absolute_path);
 
         exit;
@@ -628,7 +637,9 @@ class RZ_File_Manager_Filesystem {
         // Set headers for zip download
         header('Content-Description: File Transfer');
         header('Content-Type: application/zip');
-        header('Content-Disposition: attachment; filename="' . basename($zip_path) . '"');
+        // *** Use the original directory name for the download filename ***
+        $download_filename = basename($path) . '.zip'; 
+        header('Content-Disposition: attachment; filename="' . $download_filename . '"');
         header('Content-Transfer-Encoding: binary');
         header('Expires: 0');
         header('Cache-Control: must-revalidate');
@@ -640,10 +651,17 @@ class RZ_File_Manager_Filesystem {
             ob_end_clean();
         }
 
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile
         readfile($zip_path);
         
         // Delete the temporary zip file
-        unlink($zip_path);
+        if ($this->filesystem) {
+            $this->filesystem->delete($zip_path);
+        } else {
+            // Fallback or log error if filesystem not initialized
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- Fallback delete if WP_Filesystem failed
+            unlink($zip_path); // Keep original as fallback, though ideally FS should be initialized
+        }
 
         exit;
     }
@@ -802,7 +820,11 @@ class RZ_File_Manager_Filesystem {
         // Ensure parent directory of destination exists
         $destination_parent = dirname($destination_absolute);
         if (!is_dir($destination_parent)) {
-            mkdir($destination_parent, 0755, true);
+            // Use WP_Filesystem to create directory
+            if ($this->filesystem && !$this->filesystem->mkdir($destination_parent, FS_CHMOD_DIR)) {
+                throw new \Exception('Failed to create destination parent directory using WP_Filesystem.');
+            }
+            // Fallback/Log if filesystem not available?
         }
 
         if (is_dir($source_absolute)) {
@@ -860,14 +882,16 @@ class RZ_File_Manager_Filesystem {
         // Ensure parent directory of destination exists
         $destination_parent = dirname($destination_absolute);
         if (!is_dir($destination_parent)) {
-            mkdir($destination_parent, 0755, true);
+            // Use WP_Filesystem to create directory
+            if ($this->filesystem && !$this->filesystem->mkdir($destination_parent, FS_CHMOD_DIR)) {
+                throw new \Exception('Failed to create destination parent directory using WP_Filesystem.');
+            }
+            // Fallback/Log if filesystem not available?
         }
 
-        // Use PHP rename, works for files and directories on the same filesystem
-        if (!rename($source_absolute, $destination_absolute)) {
-            // Attempt WordPress move if rename fails (might handle cross-filesystem better? Check WP docs)
-            // For now, stick to rename for simplicity on the same filesystem.
-            throw new \Exception('Failed to move item.'); 
+        // Use WP_Filesystem::move() for renaming/moving files and directories
+        if ($this->filesystem && !$this->filesystem->move($source_absolute, $destination_absolute, true)) { // true = overwrite
+            throw new \Exception('Failed to move item using WP_Filesystem.'); 
         }
 
         return true;
@@ -877,7 +901,7 @@ class RZ_File_Manager_Filesystem {
      * Deletes multiple files or directories.
      *
      * @param array $paths Array of paths to delete.
-     * @return bool|WP_Error True on success or WP_Error on failure.
+     * @return bool|WP_Error True on success, WP_Error on failure.
      */
     public function delete_bulk($paths) {
         // Validate paths

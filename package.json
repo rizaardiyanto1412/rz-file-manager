@@ -6,6 +6,7 @@
   "scripts": {
     "start": "wp-scripts start",
     "build": "wp-scripts build",
+    "package": "npm run build && rm -rf rz-file-manager rz-file-manager.zip && mkdir rz-file-manager && cp -R includes assets rz-file-manager.php uninstall.php rz-file-manager/ && zip -r rz-file-manager.zip rz-file-manager -x \"*.DS_Store\" \"*/.DS_Store\" && rm -rf rz-file-manager",
     "format": "wp-scripts format",
     "lint:js": "wp-scripts lint-js",
     "lint:css": "wp-scripts lint-style"

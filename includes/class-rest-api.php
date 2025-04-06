@@ -375,7 +375,7 @@ class RZ_File_Manager_REST_API {
         return new WP_REST_Response(
             array(
                 'success' => true,
-                'message' => __('Folder created successfully.', 'rz-file-manager'),
+                'message' => esc_html__('Folder created successfully.', 'rz-file-manager'),
             ),
             201
         );
@@ -394,7 +394,6 @@ class RZ_File_Manager_REST_API {
         // Get the base uploads directory
         $base_dir = $this->filesystem->get_root_path();
         if (is_wp_error($base_dir)) {
-            error_log('[PHP REST API] handle_create_file_request: Error getting base directory: ' . $base_dir->get_error_message());
             return new WP_Error('base_dir_error', __('Could not determine base directory.', 'rz-file-manager'), array('status' => 500));
         }
 
@@ -402,7 +401,6 @@ class RZ_File_Manager_REST_API {
 
         // Check if validate_path returned an error or if it's not a directory
         if (is_wp_error($full_dir_path) || !$this->filesystem->is_dir($full_dir_path)) {
-            error_log('[PHP REST API] handle_create_file_request: Invalid directory path resolved: ' . (is_wp_error($full_dir_path) ? $full_dir_path->get_error_message() : $full_dir_path));
             return $full_dir_path instanceof WP_Error ? $full_dir_path : new WP_Error('invalid_directory_path', __('Invalid or non-existent directory path specified.', 'rz-file-manager'), array('status' => 400));
         }
 
@@ -427,31 +425,30 @@ class RZ_File_Manager_REST_API {
         $full_file_path = $full_dir_path . DIRECTORY_SEPARATOR . $filename;
 
         // Check if file already exists
-        if (file_exists($full_file_path)) {
+        if ($this->filesystem->exists($full_file_path)) {
             return new WP_Error(
                 'file_exists',
-                __('File already exists.', 'rz-file-manager'),
+                esc_html__('File already exists.', 'rz-file-manager'), // Use esc_html__ here too
                 array('status' => 400)
             );
         }
 
-        // Attempt to create an empty file
-        $file_handle = @fopen($full_file_path, 'w');
-        if ($file_handle !== false) {
-            fclose($file_handle);
-            // Optionally set permissions, e.g., chmod($full_file_path, 0644);
+        // Attempt to create an empty file using WP_Filesystem
+        $result = $this->filesystem->put_contents($full_file_path, '');
+
+        if ($result === true) {
+            // Optionally set permissions using WP_Filesystem if needed: $this->filesystem->chmod($full_file_path, 0644);
             return new WP_REST_Response(
                 array(
                     'success' => true,
-                    'message' => __('File created successfully.', 'rz-file-manager'),
+                    'message' => esc_html__('File created successfully.', 'rz-file-manager'),
                 ),
                 201
             );
         } else {
-            // Could also use file_put_contents($full_file_path, '') === false as a check
             return new WP_Error(
                 'create_file_error',
-                __('Could not create file. Check permissions.', 'rz-file-manager'),
+                esc_html__('Could not create file. Check permissions.', 'rz-file-manager'), // Use esc_html__
                 array('status' => 500)
             );
         }
@@ -464,50 +461,58 @@ class RZ_File_Manager_REST_API {
      * @return WP_REST_Response|WP_Error Response object or WP_Error.
      */
     public function handle_upload_file($request) {
-        $current_path = $request->get_param('current_path');
-        error_log('[PHP REST API] handle_upload_file: Received request.');
-        error_log('[PHP REST API] handle_upload_file: current_path = ' . print_r($current_path, true));
-        error_log('[PHP REST API] handle_upload_file: $_FILES = ' . print_r($_FILES, true));
+        // Security Note: Nonce verification is typically handled by the 'permission_callback' 
+        // in register_rest_route for REST API endpoints, not checked here directly.
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $current_path = $request->get_param('current_path'); // Assuming path is validated/sanitized by filesystem methods
 
         // Basic validation
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
         if (!isset($_FILES['file'])) {
-            error_log('[PHP REST API] handle_upload_file: Error - $_FILES["file"] not set.');
-            return new WP_REST_Response(['success' => false, 'message' => 'No file data received.'], 400);
+            return new WP_REST_Response(['success' => false, 'message' => esc_html__('No file data received.', 'rz-file-manager')], 400);
         }
 
-        // Check for upload errors
-        if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-            error_log('[PHP REST API] handle_upload_file: Error - Upload error code: ' . $_FILES['file']['error']);
-            return new WP_REST_Response(['success' => false, 'message' => $this->get_upload_error_message($_FILES['file']['error'])], 400);
+        // Check for upload errors (ensure index exists first)
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if (!isset($_FILES['file']['error'])){
+             return new WP_REST_Response(['success' => false, 'message' => esc_html__('Invalid file upload data.', 'rz-file-manager')], 400);
+        }
+        
+        $upload_error = (int) $_FILES['file']['error']; // Sanitize as integer
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ($upload_error !== UPLOAD_ERR_OK) {
+            return new WP_REST_Response(['success' => false, 'message' => $this->get_upload_error_message($upload_error)], 400);
         }
 
+        // The $this->filesystem->upload_file method is responsible for securely handling 
+        // and sanitizing the contents of the $_FILES['file'] array (e.g., using wp_handle_upload).
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce handled by REST permission_callback
         $file = $_FILES['file'];
 
         try {
             // Assume $this->filesystem is an instance of your Filesystem class
-            error_log('[PHP REST API] handle_upload_file: Calling filesystem->upload_file...');
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitization handled within upload_file method
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce handled by REST permission_callback
             $result = $this->filesystem->upload_file($current_path, $file);
-            error_log('[PHP REST API] handle_upload_file: Filesystem result: ' . print_r($result, true));
 
             // Check if the filesystem operation returned exactly true
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce handled by REST permission_callback
             if ($result === true) {
                 // Filesystem class returned true, assume success, provide generic message
-                return new WP_REST_Response(['success' => true, 'message' => 'File uploaded successfully.'], 200);
+                return new WP_REST_Response(['success' => true, 'message' => esc_html__('File uploaded successfully.', 'rz-file-manager')], 200);
             } else {
                 // Handle WP_Error specifically
                 if (is_wp_error($result)) {
                     $message = $result->get_error_message();
-                    error_log('[PHP REST API] handle_upload_file: Upload failed (WP_Error). Message: ' . $message);
                 } else {
                     // Handle other failures (e.g., if filesystem returned false)
                     $message = is_array($result) && isset($result['message']) ? $result['message'] : 'Failed to upload file (filesystem operation failed).';
-                    error_log('[PHP REST API] handle_upload_file: Upload failed (Non-WP_Error). Filesystem result: ' . print_r($result, true));
                 }
-                return new WP_REST_Response(['success' => false, 'message' => $message], 500);
+                return new WP_REST_Response(['success' => false, 'message' => esc_html($message)], 500);
             }
         } catch (Exception $e) {
-            error_log('[PHP REST API] handle_upload_file: Exception caught: ' . $e->getMessage());
-            return new WP_REST_Response(['success' => false, 'message' => 'Server error during upload: ' . $e->getMessage()], 500);
+            return new WP_REST_Response(['success' => false, 'message' => 'Server error during upload: ' . esc_html($e->getMessage())], 500);
         }
     }
 
@@ -564,7 +569,7 @@ class RZ_File_Manager_REST_API {
         return new WP_REST_Response(
             array(
                 'success' => true,
-                'message' => __('Item deleted successfully.', 'rz-file-manager'),
+                'message' => esc_html__('Item deleted successfully.', 'rz-file-manager'),
             ),
             200
         );
@@ -597,7 +602,7 @@ class RZ_File_Manager_REST_API {
         return new WP_REST_Response(
             array(
                 'success' => true,
-                'message' => __('Item renamed successfully.', 'rz-file-manager'),
+                'message' => esc_html__('Item renamed successfully.', 'rz-file-manager'),
             ),
             200
         );
@@ -630,7 +635,7 @@ class RZ_File_Manager_REST_API {
         return new WP_REST_Response(
             array(
                 'success' => true,
-                'message' => __('Item copied successfully.', 'rz-file-manager'),
+                'message' => esc_html__('Item copied successfully.', 'rz-file-manager'),
             ),
             200
         );
@@ -663,7 +668,7 @@ class RZ_File_Manager_REST_API {
         return new WP_REST_Response(
             array(
                 'success' => true,
-                'message' => __('Item moved successfully.', 'rz-file-manager'),
+                'message' => esc_html__('Item moved successfully.', 'rz-file-manager'),
             ),
             200
         );
@@ -728,7 +733,7 @@ class RZ_File_Manager_REST_API {
         return new WP_REST_Response(
             array(
                 'success' => true,
-                'message' => __('File saved successfully.', 'rz-file-manager'),
+                'message' => esc_html__('File saved successfully.', 'rz-file-manager'),
             ),
             200
         );
@@ -783,6 +788,8 @@ class RZ_File_Manager_REST_API {
         flush();
         
         // Read file and output it
+        // Note: Using readfile for performance in downloads. Ensure $absolute_path is validated before calling this function.
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile
         readfile($absolute_path);
         exit;
     }
@@ -822,7 +829,7 @@ class RZ_File_Manager_REST_API {
 
         // Basic security: Ensure the user has the necessary capability (already done by permission_callback, but good practice).
         if (!current_user_can('manage_options')) { // Or a more specific capability
-            return new WP_Error('rest_forbidden', esc_html__('Sorry, you are not allowed to do that.'), array('status' => is_user_logged_in() ? 403 : 401));
+            return new WP_Error('rest_forbidden', esc_html__('Sorry, you are not allowed to do that.', 'rz-file-manager'), array('status' => is_user_logged_in() ? 403 : 401));
         }
         
          // Consider adding checks for allowed file types here
@@ -882,13 +889,14 @@ class RZ_File_Manager_REST_API {
 
         // Check user capabilities (e.g., can they manage files?)
         if (!current_user_can('upload_files')) {
-            wp_die(__('You do not have permission to download files.', 'rz-file-manager'), 403);
+            wp_die(esc_html__('You do not have permission to download files.', 'rz-file-manager'), 403);
         }
 
-        $path = isset($_REQUEST['path']) ? wp_unslash($_REQUEST['path']) : '';
+        // Sanitize input path
+        $path = isset($_REQUEST['path']) ? sanitize_text_field(wp_unslash($_REQUEST['path'])) : '';
 
         if (empty($path)) {
-            wp_die(__('Invalid file path.', 'rz-file-manager'), 400);
+            wp_die(esc_html__('Invalid file path.', 'rz-file-manager'), 400);
         }
 
         // Call the filesystem method (to be created)
@@ -896,7 +904,7 @@ class RZ_File_Manager_REST_API {
 
         // If the filesystem method returned an error (WP_Error), handle it
         if (is_wp_error($result)) {
-            wp_die($result->get_error_message(), $result->get_error_code() ?: 400);
+            wp_die(esc_html($result->get_error_message()), (int) ($result->get_error_code() ?: 400));
         }
 
         // On success, download_file() handles the exit, so no code should run here.
@@ -911,13 +919,14 @@ class RZ_File_Manager_REST_API {
 
         // Check user capabilities
         if (!current_user_can('upload_files')) {
-            wp_die(__('You do not have permission to download folders.', 'rz-file-manager'), 403);
+            wp_die(esc_html__('You do not have permission to download folders.', 'rz-file-manager'), 403);
         }
 
-        $path = isset($_REQUEST['path']) ? wp_unslash($_REQUEST['path']) : '';
+        // Sanitize input path
+        $path = isset($_REQUEST['path']) ? sanitize_text_field(wp_unslash($_REQUEST['path'])) : '';
 
         if (empty($path)) {
-            wp_die(__('Invalid directory path.', 'rz-file-manager'), 400);
+            wp_die(esc_html__('Invalid directory path.', 'rz-file-manager'), 400);
         }
 
         // Call the filesystem method (to be created)
@@ -925,7 +934,7 @@ class RZ_File_Manager_REST_API {
 
         // If the filesystem method returned an error (WP_Error), handle it
         if (is_wp_error($result)) {
-            wp_die($result->get_error_message(), $result->get_error_code() ?: 400);
+            wp_die(esc_html($result->get_error_message()), (int) ($result->get_error_code() ?: 400));
         }
 
         // On success, download_directory_as_zip() handles the exit, so no code should run here.
@@ -956,7 +965,7 @@ class RZ_File_Manager_REST_API {
             return new WP_Error($result->get_error_code(), $result->get_error_message(), array('status' => $status_code));
         }
 
-        return new WP_REST_Response(array('success' => true, 'message' => __('Item zipped successfully.', 'rz-file-manager')), 201); // 201 Created (as a zip file was created)
+        return new WP_REST_Response(array('success' => true, 'message' => esc_html__('Item zipped successfully.', 'rz-file-manager')), 201); // 201 Created (as a zip file was created)
     }
 
     /**
@@ -988,7 +997,7 @@ class RZ_File_Manager_REST_API {
             return new WP_Error($result->get_error_code(), $result->get_error_message(), array('status' => $status_code));
         }
 
-        return new WP_REST_Response(array('success' => true, 'message' => __('Archive extracted successfully.', 'rz-file-manager')), 200); // 200 OK
+        return new WP_REST_Response(array('success' => true, 'message' => esc_html__('Archive extracted successfully.', 'rz-file-manager')), 200); // 200 OK
     }
 
     /**
@@ -1009,7 +1018,7 @@ class RZ_File_Manager_REST_API {
             $result = $this->filesystem->copy_item($source, $destination);
 
             if ($result) {
-                return new WP_REST_Response(array('success' => true, 'message' => __('Item copied successfully.', 'rz-file-manager')), 200);
+                return new WP_REST_Response(array('success' => true, 'message' => esc_html__('Item copied successfully.', 'rz-file-manager')), 200);
             } else {
                 // Should be caught by exception
                 return new WP_Error('copy_failed', __('Failed to copy item (unknown reason).', 'rz-file-manager'), array('status' => 500));
@@ -1043,7 +1052,7 @@ class RZ_File_Manager_REST_API {
             $result = $this->filesystem->move_item($source, $destination);
 
             if ($result) {
-                return new WP_REST_Response(array('success' => true, 'message' => __('Item moved successfully.', 'rz-file-manager')), 200);
+                return new WP_REST_Response(array('success' => true, 'message' => esc_html__('Item moved successfully.', 'rz-file-manager')), 200);
             } else {
                 // Should be caught by exception
                 return new WP_Error('move_failed', __('Failed to move item (unknown reason).', 'rz-file-manager'), array('status' => 500));
