@@ -289,16 +289,8 @@ class RZ_File_Manager_Filesystem {
         $dirname = dirname($absolute_path);
         $new_path = trailingslashit($dirname) . $new_name;
         
-        error_log('[RZ_FM Filesystem->rename] Received path: ' . print_r($path, true));
-        error_log('[RZ_FM Filesystem->rename] Received new_name: ' . print_r($new_name, true));
-        error_log('[RZ_FM Filesystem->rename] Validated absolute_path: ' . print_r($absolute_path, true));
-        error_log('[RZ_FM Filesystem->rename] Calculated dirname: ' . print_r($dirname, true));
-        error_log('[RZ_FM Filesystem->rename] Calculated new_path: ' . print_r($new_path, true));
-        $exists_result = $this->filesystem->exists($new_path);
-        error_log('[RZ_FM Filesystem->rename] Result of exists check for new_path: ' . print_r($exists_result, true));
-        
         // Check if target already exists
-        if ($exists_result) {
+        if ($this->filesystem->exists($new_path)) {
             return new WP_Error('already_exists', __('A file or directory with that name already exists.', 'rz-file-manager'));
         }
         
