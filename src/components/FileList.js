@@ -2,6 +2,7 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
+import React from 'react';
 
 /**
  * Internal dependencies
@@ -20,7 +21,7 @@ import FileItem from './FileItem';
  */
 const FileList = ({ onRename }) => {
   // Get state and methods from context
-  const { items, currentPath } = useFileManager();
+  const { items, currentPath, sortKey, sortDirection, setSort } = useFileManager();
 
   // If there are no items, show a message
   if (items.length === 0) {
@@ -31,17 +32,42 @@ const FileList = ({ onRename }) => {
     );
   }
 
+  const handleSort = (key) => {
+    setSort(key);
+  };
+
+  // Helper to generate sort indicator (arrow)
+  const getSortIndicator = (key) => {
+    if (sortKey !== key) {
+      return null; // No indicator if not the active sort column
+    }
+    // Use Dashicons for up/down arrows
+    const iconClass = sortDirection === 'asc' 
+      ? 'dashicons dashicons-arrow-up-alt2' 
+      : 'dashicons dashicons-arrow-down-alt2';
+    return <span className={iconClass} style={{ marginLeft: '5px' }}></span>;
+  };
+
   return (
     <div className="rz-file-manager__file-list">
       <table className="rz-file-manager__table">
-        <thead>
-          <tr>
+        <thead className="rz-file-manager__table-head">
+          <tr onClick={(e) => e.stopPropagation()}> {/* Prevent triggering row clicks */} 
             <th className="rz-file-manager__table-checkbox">
               <span className="screen-reader-text">{__('Select', 'rz-file-manager')}</span>
             </th>
-            <th className="rz-file-manager__table-name">{__('Name', 'rz-file-manager')}</th>
-            <th className="rz-file-manager__table-size">{__('Size', 'rz-file-manager')}</th>
-            <th className="rz-file-manager__table-modified">{__('Modified', 'rz-file-manager')}</th>
+            <th className="rz-file-manager__table-name" onClick={() => handleSort('name')}>
+              {__('Name', 'rz-file-manager')}
+              {getSortIndicator('name')}
+            </th>
+            <th className="rz-file-manager__table-size" onClick={() => handleSort('size')}>
+              {__('Size', 'rz-file-manager')}
+              {getSortIndicator('size')}
+            </th>
+            <th className="rz-file-manager__table-modified" onClick={() => handleSort('modified')}>
+              {__('Modified', 'rz-file-manager')}
+              {getSortIndicator('modified')}
+            </th>
             <th className="rz-file-manager__table-actions">{__('Actions', 'rz-file-manager')}</th>
           </tr>
         </thead>

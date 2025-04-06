@@ -134,6 +134,11 @@
 .rz-file-manager__table th {
   background-color: #f9f9f9;
   font-weight: 600;
+  cursor: pointer;
+}
+
+.rz-file-manager__table th[onClick] {
+  cursor: pointer;
 }
 
 .rz-file-manager__table-checkbox {

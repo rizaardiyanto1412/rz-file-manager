@@ -40,6 +40,10 @@ export const FileManagerProvider = ({ children }) => {
   // State for success messages
   const [successMessage, setSuccessMessage] = useState(null);
 
+  // State for sorting
+  const [sortKey, setSortKey] = useState('name'); // Default sort by name
+  const [sortDirection, setSortDirection] = useState('asc'); // Default ascending
+
   // State for context menu
   const [contextMenu, setContextMenu] = useState({ 
     visible: false, 
@@ -58,7 +62,8 @@ export const FileManagerProvider = ({ children }) => {
     try {
       const response = await fetchFiles(currentPath);
       if (response.success) {
-        setItems(response.items);
+        const sortedData = sortItems(response.items, sortKey, sortDirection);
+        setItems(sortedData);
       } else {
         setError(response.message || 'Failed to load files');
       }
@@ -67,6 +72,37 @@ export const FileManagerProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Sort items based on key and direction
+   * Folders always come before files
+   * @param {Array} itemsToSort Items to sort
+   * @param {string} key Sort key ('name', 'size', 'modified')
+   * @param {string} direction Sort direction ('asc', 'desc')
+   * @return {Array} Sorted items
+   */
+  const sortItems = (itemsToSort, key, direction) => {
+    return [...itemsToSort].sort((a, b) => {
+      // Always sort directories before files
+      if (a.type === 'directory' && b.type !== 'directory') return -1;
+      if (a.type !== 'directory' && b.type === 'directory') return 1;
+
+      let comparison = 0;
+      if (key === 'name') {
+        comparison = a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+      } else if (key === 'size') {
+        // Treat directories as having size -1 for sorting purposes if needed,
+        // but the primary directory check handles most cases.
+        const sizeA = a.type === 'directory' ? -1 : a.size;
+        const sizeB = b.type === 'directory' ? -1 : b.size;
+        comparison = sizeA - sizeB;
+      } else if (key === 'modified') {
+        comparison = a.modified - b.modified;
+      }
+
+      return direction === 'asc' ? comparison : comparison * -1;
+    });
   };
 
   /**
@@ -251,10 +287,11 @@ export const FileManagerProvider = ({ children }) => {
   // Function to show the context menu
   const showContextMenu = useCallback((item, event) => {
     event.preventDefault();
+    // Use pageX/pageY for positioning relative to the document
     setContextMenu({
       visible: true,
-      x: event.clientX,
-      y: event.clientY,
+      x: event.pageX, 
+      y: event.pageY,
       item: item,
     });
   }, []);
@@ -269,7 +306,7 @@ export const FileManagerProvider = ({ children }) => {
   // Load items when current path changes
   useEffect(() => {
     loadItems();
-  }, [currentPath]);
+  }, [currentPath, sortKey, sortDirection]);
 
   // Clear success message after 3 seconds
   useEffect(() => {
@@ -281,6 +318,18 @@ export const FileManagerProvider = ({ children }) => {
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
+
+  /**
+   * Set the sort key and direction
+   * @param {string} newKey The key to sort by ('name', 'size', 'modified')
+   */
+  const setSort = (newKey) => {
+    const newDirection = (sortKey === newKey && sortDirection === 'asc') ? 'desc' : 'asc';
+    setSortKey(newKey);
+    setSortDirection(newDirection);
+    // Re-sort existing items immediately
+    setItems(prevItems => sortItems(prevItems, newKey, newDirection));
+  };
 
   // Context value
   const value = {
@@ -301,6 +350,9 @@ export const FileManagerProvider = ({ children }) => {
     handleDeleteItems,
     handleRenameItem,
     reloadItems: loadItems,
+    sortKey,
+    sortDirection,
+    setSort,
     contextMenu,
     showContextMenu,
     hideContextMenu,
