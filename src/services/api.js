@@ -162,45 +162,7 @@ export const renameItem = async (path, newName) => {
   }
 };
 
-/**
- * Copy a file or folder
- * 
- * @param {string} source Source path
- * @param {string} destination Destination path
- * @return {Promise<Object>} API response
- */
-export const copyItem = async (source, destination) => {
-  try {
-    const response = await apiFetch({
-      path: `${API_BASE_PATH}/copy`,
-      method: 'POST',
-      data: { source, destination },
-    });
-    return response;
-  } catch (error) {
-    return { success: false, message: error.message };
-  }
-};
 
-/**
- * Move a file or folder
- * 
- * @param {string} source Source path
- * @param {string} destination Destination path
- * @return {Promise<Object>} API response
- */
-export const moveItem = async (source, destination) => {
-  try {
-    const response = await apiFetch({
-      path: `${API_BASE_PATH}/move`,
-      method: 'POST',
-      data: { source, destination },
-    });
-    return response;
-  } catch (error) {
-    return { success: false, message: error.message };
-  }
-};
 
 /**
  * Fetch file content.
@@ -390,3 +352,17 @@ export const unzipItem = async (path) => {
     throw error;
   }
 };
+
+// Copy an item (file or directory)
+export const copyItem = async (source, destination) => apiFetch({
+  path: API_BASE_PATH + '/copy',
+  method: 'POST',
+  data: { source, destination }
+});
+
+// Move an item (file or directory) - used for Cut/Paste
+export const moveItem = async (source, destination) => apiFetch({
+  path: API_BASE_PATH + '/move',
+  method: 'POST',
+  data: { source, destination }
+});

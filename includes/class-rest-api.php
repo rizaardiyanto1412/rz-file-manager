@@ -176,7 +176,7 @@ class RZ_File_Manager_REST_API {
             '/copy',
             array(
                 'methods'             => WP_REST_Server::CREATABLE,
-                'callback'            => array($this, 'copy_item'),
+                'callback'            => array($this, 'handle_copy_request'),
                 'permission_callback' => array($this, 'check_permissions'),
                 'args'                => array(
                     'source' => array(
@@ -197,7 +197,7 @@ class RZ_File_Manager_REST_API {
             '/move',
             array(
                 'methods'             => WP_REST_Server::CREATABLE,
-                'callback'            => array($this, 'move_item'),
+                'callback'            => array($this, 'handle_move_request'),
                 'permission_callback' => array($this, 'check_permissions'),
                 'args'                => array(
                     'source' => array(
@@ -983,5 +983,73 @@ class RZ_File_Manager_REST_API {
         }
 
         return new WP_REST_Response(array('success' => true, 'message' => __('Archive extracted successfully.', 'rz-file-manager')), 200); // 200 OK
+    }
+
+    /**
+     * Handles the REST API request to copy an item.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     * @return WP_REST_Response|WP_Error
+     */
+    public function handle_copy_request(WP_REST_Request $request) {
+        try {
+            $source = $request->get_param('source');
+            $destination = $request->get_param('destination');
+
+            if (empty($source) || empty($destination)) {
+                return new WP_Error('missing_parameter', __('Missing source or destination path.', 'rz-file-manager'), array('status' => 400));
+            }
+
+            $result = $this->filesystem->copy_item($source, $destination);
+
+            if ($result) {
+                return new WP_REST_Response(array('success' => true, 'message' => __('Item copied successfully.', 'rz-file-manager')), 200);
+            } else {
+                // Should be caught by exception
+                return new WP_Error('copy_failed', __('Failed to copy item (unknown reason).', 'rz-file-manager'), array('status' => 500));
+            }
+        } catch (\Exception $e) {
+            $status_code = 500;
+            if (strpos($e->getMessage(), 'already exists') !== false) {
+                $status_code = 409; // Conflict
+            } elseif (strpos($e->getMessage(), 'outside the allowed directory') !== false || strpos($e->getMessage(), 'Invalid path') !== false) {
+                $status_code = 400; // Bad request
+            }
+            return new WP_Error('copy_error', $e->getMessage(), array('status' => $status_code));
+        }
+    }
+
+    /**
+     * Handles the REST API request to move an item.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     * @return WP_REST_Response|WP_Error
+     */
+    public function handle_move_request(WP_REST_Request $request) {
+        try {
+            $source = $request->get_param('source');
+            $destination = $request->get_param('destination');
+
+            if (empty($source) || empty($destination)) {
+                return new WP_Error('missing_parameter', __('Missing source or destination path.', 'rz-file-manager'), array('status' => 400));
+            }
+
+            $result = $this->filesystem->move_item($source, $destination);
+
+            if ($result) {
+                return new WP_REST_Response(array('success' => true, 'message' => __('Item moved successfully.', 'rz-file-manager')), 200);
+            } else {
+                // Should be caught by exception
+                return new WP_Error('move_failed', __('Failed to move item (unknown reason).', 'rz-file-manager'), array('status' => 500));
+            }
+        } catch (\Exception $e) {
+            $status_code = 500;
+            if (strpos($e->getMessage(), 'already exists') !== false) {
+                $status_code = 409; // Conflict
+            } elseif (strpos($e->getMessage(), 'outside the allowed directory') !== false || strpos($e->getMessage(), 'Invalid path') !== false) {
+                $status_code = 400; // Bad request
+            }
+            return new WP_Error('move_error', $e->getMessage(), array('status' => $status_code));
+        }
     }
 }

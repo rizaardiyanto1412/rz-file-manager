@@ -746,4 +746,159 @@ class RZ_File_Manager_Filesystem {
         }
         return $this->filesystem->is_dir($path);
     }
+
+    // --- Bulk Operations ---
+
+    /**
+     * Recursively copies a file or directory.
+     *
+     * @param string $source_relative      Relative path to the source item.
+     * @param string $destination_relative Relative path to the destination item.
+     * @return bool True on success, false on failure.
+     * @throws \Exception If validation fails or copy operation fails.
+     */
+    public function copy_item($source_relative, $destination_relative) {
+        // Validate source path
+        $source_absolute = $this->validate_path($source_relative);
+        if (is_wp_error($source_absolute)) {
+            return $source_absolute; // Propagate the error
+        }
+
+        // Construct and validate destination path (allow non-existence, check against root)
+        $norm_dest_relative = str_replace('\\', '/', $destination_relative);
+        $norm_dest_relative = preg_replace('/\.\.\//', '', $norm_dest_relative); // Remove ../
+        $destination_absolute = $this->root_path . '/' . ltrim($norm_dest_relative, '/');
+        $destination_absolute = wp_normalize_path($destination_absolute);
+
+        // Security check: Ensure the calculated destination is within the root path
+        $normalized_root_path = wp_normalize_path($this->root_path);
+        if (strpos($destination_absolute, $normalized_root_path) !== 0) {
+            return new WP_Error('invalid_path', __('Destination path is outside the allowed directory.', 'rz-file-manager'));
+        }
+
+        // Check if source exists
+        if (!$this->filesystem->exists($source_absolute)) {
+            throw new \Exception('Source file or directory not found.');
+        }
+
+        if ($source_absolute === $destination_absolute) {
+            throw new \Exception('Source and destination paths cannot be the same.');
+        }
+
+        if (file_exists($destination_absolute)) {
+            throw new \Exception('Destination path already exists.');
+        }
+
+        // Ensure parent directory of destination exists
+        $destination_parent = dirname($destination_absolute);
+        if (!is_dir($destination_parent)) {
+            mkdir($destination_parent, 0755, true);
+        }
+
+        if (is_dir($source_absolute)) {
+            // Use WordPress function for recursive directory copy
+            if (!copy_dir($source_absolute, $destination_absolute)) {
+                throw new \Exception('Failed to copy directory.');
+            }
+        } else {
+            // Use PHP function for file copy
+            if (!copy($source_absolute, $destination_absolute)) {
+                throw new \Exception('Failed to copy file.');
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Move (renames) a file or directory.
+     *
+     * @param string $source_relative      Relative path to the source item.
+     * @param string $destination_relative Relative path to the destination item.
+     * @return bool True on success, false on failure.
+     * @throws \Exception If validation fails or move operation fails.
+     */
+    public function move_item($source_relative, $destination_relative) {
+        $source_absolute = $this->validate_path($source_relative);
+
+        // Construct the potential absolute destination path
+        $norm_dest_relative = str_replace('\\', '/', $destination_relative);
+        $norm_dest_relative = preg_replace('/\.\.\//', '', $norm_dest_relative); // Remove ../
+        $destination_absolute = $this->root_path . '/' . ltrim($norm_dest_relative, '/');
+        // Normalize the path (resolves . and redundant slashes, but preserves non-existent segments)
+        $destination_absolute = wp_normalize_path($destination_absolute);
+
+        // Security check: Ensure the calculated destination is within the root path
+        $normalized_root_path = wp_normalize_path($this->root_path);
+        if (strpos($destination_absolute, $normalized_root_path) !== 0) {
+            throw new \Exception('Destination path is outside the allowed directory.');
+        }
+
+        // Check if source exists
+        if (!$this->filesystem->exists($source_absolute)) {
+            throw new \Exception('Source file or directory not found.');
+        }
+
+        if ($source_absolute === $destination_absolute) {
+            throw new \Exception('Source and destination paths cannot be the same.');
+        }
+
+        if (file_exists($destination_absolute)) {
+            throw new \Exception('Destination path already exists.');
+        }
+
+        // Ensure parent directory of destination exists
+        $destination_parent = dirname($destination_absolute);
+        if (!is_dir($destination_parent)) {
+            mkdir($destination_parent, 0755, true);
+        }
+
+        // Use PHP rename, works for files and directories on the same filesystem
+        if (!rename($source_absolute, $destination_absolute)) {
+            // Attempt WordPress move if rename fails (might handle cross-filesystem better? Check WP docs)
+            // For now, stick to rename for simplicity on the same filesystem.
+            throw new \Exception('Failed to move item.'); 
+        }
+
+        return true;
+    }
+
+    /**
+     * Deletes multiple files or directories.
+     *
+     * @param array $paths Array of paths to delete.
+     * @return bool|WP_Error True on success or WP_Error on failure.
+     */
+    public function delete_bulk($paths) {
+        // Validate paths
+        foreach ($paths as $path) {
+            $absolute_path = $this->validate_path($path);
+            if (!$absolute_path) {
+                return new WP_Error('invalid_path', __('Invalid path specified.', 'rz-file-manager'));
+            }
+        }
+
+        // Delete each path
+        foreach ($paths as $path) {
+            $absolute_path = $this->validate_path($path);
+            if (!$this->filesystem->exists($absolute_path)) {
+                return new WP_Error('not_found', __('File or directory not found.', 'rz-file-manager'));
+            }
+
+            // Delete file or directory
+            if ($this->filesystem->is_dir($absolute_path)) {
+                // Delete directory recursively
+                if (!$this->filesystem->rmdir($absolute_path, true)) {
+                    return new WP_Error('delete_failed', __('Failed to delete directory.', 'rz-file-manager'));
+                }
+            } else {
+                // Delete file
+                if (!$this->filesystem->delete($absolute_path)) {
+                    return new WP_Error('delete_failed', __('Failed to delete file.', 'rz-file-manager'));
+                }
+            }
+        }
+
+        return true;
+    }
 }

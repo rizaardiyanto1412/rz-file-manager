@@ -6,7 +6,20 @@ import { createContext, useState, useContext, useEffect, useCallback, useMemo } 
 /**
  * Internal dependencies
  */
-import { fetchFiles, createFolder, uploadFile, deleteItem, renameItem, copyItem, moveItem, getFileContent, saveFileContent, createFile, zipItem, unzipItem } from '../services/api';
+import { 
+  fetchFiles, 
+  createFolder, 
+  uploadFile, 
+  deleteItem, 
+  renameItem, 
+  copyItem, 
+  moveItem, 
+  getFileContent, 
+  saveFileContent, 
+  createFile, 
+  zipItem, 
+  unzipItem 
+} from '../services/api';
 
 // Create context
 const FileManagerContext = createContext();
@@ -81,6 +94,9 @@ export const FileManagerProvider = ({ children }) => {
 
   // State for New File Modal
   const [newFileModalState, setNewFileModalState] = useState({ isOpen: false });
+
+  // ** NEW ** State for clipboard (copy/cut)
+  const [clipboardState, setClipboardState] = useState({ action: null, items: [] });
 
   /**
    * Load files and folders for the current path
@@ -578,6 +594,76 @@ export const FileManagerProvider = ({ children }) => {
     setNewFileModalState({ isOpen: false });
   }, []);
 
+  // --- ** NEW ** Clipboard Handlers ---
+  const handleCopyItems = useCallback((itemsToCopy) => {
+    if (!itemsToCopy || itemsToCopy.length === 0) return;
+    setClipboardState({ action: 'copy', items: itemsToCopy });
+    setSuccessMessage(`${itemsToCopy.length} item(s) added to clipboard for copying.`);
+    // Clear any lingering error messages
+    setError(null);
+  }, []);
+
+  const handleCutItems = useCallback((itemsToCut) => {
+    if (!itemsToCut || itemsToCut.length === 0) return;
+    setClipboardState({ action: 'cut', items: itemsToCut });
+    setSuccessMessage(`${itemsToCut.length} item(s) added to clipboard for cutting.`);
+    // Clear any lingering error messages
+    setError(null);
+  }, []);
+
+  const handlePasteItems = useCallback(async () => {
+    const { action, items } = clipboardState;
+    if (!action || !items || items.length === 0) {
+      setError('Clipboard is empty or action is invalid.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    const destinationDir = currentPath; // Paste into the current directory
+    const operation = action === 'copy' ? copyItem : moveItem;
+    const operationVerb = action === 'copy' ? 'copied' : 'moved';
+
+    const promises = items.map(item => {
+      const sourcePath = item.path; 
+      // Construct destination path carefully, avoiding double slashes if root
+      const destinationPath = destinationDir === '/' 
+                               ? '/' + item.name 
+                               : destinationDir + '/' + item.name;
+      return operation(sourcePath, destinationPath);
+    });
+
+    const results = await Promise.allSettled(promises);
+
+    const failedOps = results.filter(result => result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success));
+    const successfulOps = results.filter(result => result.status === 'fulfilled' && result.value.success);
+
+    if (failedOps.length > 0) {
+      console.error(`Failed ${action} operations:`, failedOps);
+      const errorMessages = failedOps.map(fail => {
+         const reason = fail.reason || fail.value; // Get error from rejected promise or failed success response
+         return reason?.message || `Failed to ${action} an item.`;
+      });
+      // Show first error message, or a generic one
+      setError(`${failedOps.length} item(s) failed to ${action}. Error: ${errorMessages[0]}`);
+    }
+
+    if (successfulOps.length > 0) {
+      setSuccessMessage(`${successfulOps.length} item(s) ${operationVerb} successfully to ${destinationDir}.`);
+      // Clear clipboard only after a successful 'cut' operation
+      if (action === 'cut') {
+        setClipboardState({ action: null, items: [] });
+      }
+      // Refresh the current directory to show pasted items
+      await loadItems(currentPath);
+    }
+
+    setLoading(false);
+
+  }, [clipboardState, currentPath]);
+
   /**
    * Load items when current path changes
    */
@@ -626,7 +712,7 @@ export const FileManagerProvider = ({ children }) => {
           console.error('Unzip failed:', err);
           let message = 'Failed to unzip archive.';
           if (err.code === 'unzip_destination_exists') {
-              message = 'Cannot extract: A file or folder with the target name already exists.';
+              message = err.message || 'Cannot extract: A file or folder with the target name already exists.';
           } else if (err.message) {
               message = err.message;
           }
@@ -748,6 +834,11 @@ export const FileManagerProvider = ({ children }) => {
     closeNewFileModal,
     handleZipItem, // Add zip handler
     handleUnzipItem, // Add unzip handler
+    // Clipboard state and actions
+    clipboardState,
+    handleCopyItems,
+    handleCutItems,
+    handlePasteItems,
   }), [
     currentPath,
     items,
@@ -766,6 +857,13 @@ export const FileManagerProvider = ({ children }) => {
     uploadModalState,
     newFileModalState, // **NEW** Add dependency
     clearMessages, // Add clearMessages to dependencies
+    handleZipItem, 
+    handleUnzipItem,
+    // Clipboard dependencies
+    clipboardState,
+    handleCopyItems,
+    handleCutItems,
+    handlePasteItems,
   ]);
 
   return (
