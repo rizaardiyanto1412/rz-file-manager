@@ -6,7 +6,7 @@ import { createContext, useState, useContext, useEffect, useCallback, useMemo } 
 /**
  * Internal dependencies
  */
-import { fetchFiles, createFolder, uploadFile, deleteItem, renameItem, copyItem, moveItem, getFileContent, saveFileContent, createFile } from '../services/api';
+import { fetchFiles, createFolder, uploadFile, deleteItem, renameItem, copyItem, moveItem, getFileContent, saveFileContent, createFile, zipItem, unzipItem } from '../services/api';
 
 // Create context
 const FileManagerContext = createContext();
@@ -85,7 +85,7 @@ export const FileManagerProvider = ({ children }) => {
   /**
    * Load files and folders for the current path
    */
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     setLoading(true);
     setError(null);
     setSelectedItems([]);
@@ -104,7 +104,7 @@ export const FileManagerProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPath, sortKey, sortDirection]); // Reload when path changes
 
   // Initial load
   useEffect(() => {
@@ -161,6 +161,7 @@ export const FileManagerProvider = ({ children }) => {
   const handleCreateFolder = async (name) => {
     setLoading(true);
     setError(null);
+    setSuccessMessage(null); // Clear previous success message
     closeCreateFolderModal(); // Close modal immediately
 
     try {
@@ -186,6 +187,7 @@ export const FileManagerProvider = ({ children }) => {
   const handleCreateFile = async (filename) => {
     setLoading(true);
     setError(null);
+    setSuccessMessage(null); // Clear previous success message
     closeNewFileModal(); // Close modal immediately
 
     try {
@@ -218,6 +220,7 @@ export const FileManagerProvider = ({ children }) => {
 
     setLoading(true);
     setError(null);
+    setSuccessMessage(null); // Clear previous success message
     setUploadError(null); // Clear previous errors on new upload attempt
     let overallSuccess = true; // Track overall success
     let finalMessage = '';
@@ -269,6 +272,7 @@ export const FileManagerProvider = ({ children }) => {
     
     setLoading(true);
     setError(null);
+    setSuccessMessage(null); // Clear previous success message
     
     try {
       // Delete each selected item
@@ -301,6 +305,7 @@ export const FileManagerProvider = ({ children }) => {
     const item = deleteModalState.itemToDelete;
     setLoading(true);
     setError(null);
+    setSuccessMessage(null); // Clear previous success message
     closeDeleteModal(); // Close modal immediately
 
     try {
@@ -327,6 +332,7 @@ export const FileManagerProvider = ({ children }) => {
   const handleRenameItem = async (path, newName) => {
     setLoading(true);
     setError(null);
+    setSuccessMessage(null); // Clear previous success message
     
     try {
       const response = await renameItem(path, newName);
@@ -445,10 +451,10 @@ export const FileManagerProvider = ({ children }) => {
   /**
    * Clear messages
    */
-  const clearMessages = () => {
+  const clearMessages = useCallback(() => {
     setError(null);
     setSuccessMessage(null);
-  };
+  }, []); // No dependencies needed as it only uses setters
 
   /**
    * Show the context menu at the specified position.
@@ -560,6 +566,58 @@ export const FileManagerProvider = ({ children }) => {
     loadItems();
   }, [currentPath, sortKey, sortDirection]);
 
+  /**
+   * Handler for zipping an item.
+   * @param {string} path The relative path of the item to zip.
+   */
+  const handleZipItem = useCallback(async (path) => {
+    console.log('Attempting to zip:', path);
+    setLoading(true);
+    setError(null);
+    setSuccessMessage(null); // Clear previous success message
+    try {
+      await zipItem(path);
+      // Refresh the list to show the new zip file
+      await loadItems(currentPath);
+      setSuccessMessage('Item zipped successfully.'); // Set success message AFTER refresh
+    } catch (err) {
+       console.error('Zip failed:', err);
+      setError(err.message || 'Failed to zip item. Please ensure the server has permissions and the PHP Zip extension is enabled.');
+      // Removed showSnackbar call
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPath]);
+
+  /**
+   * Handler for unzipping an item.
+   * @param {string} path The relative path of the zip file to unzip.
+   */
+  const handleUnzipItem = useCallback(async (path) => {
+      console.log('Attempting to unzip:', path);
+      setLoading(true);
+      setError(null);
+      setSuccessMessage(null); // Clear previous success message
+      try {
+          await unzipItem(path);
+          // Refresh the list to show the extracted contents
+          await loadItems(currentPath);
+          setSuccessMessage('Archive extracted successfully.'); // Set success message AFTER refresh
+      } catch (err) {
+          console.error('Unzip failed:', err);
+          let message = 'Failed to unzip archive.';
+          if (err.code === 'unzip_destination_exists') {
+              message = 'Cannot extract: A file or folder with the target name already exists.';
+          } else if (err.message) {
+              message = err.message;
+          }
+          setError(message);
+          // Removed showSnackbar call
+      } finally {
+          setLoading(false);
+      }
+  }, [currentPath]);
+
   // Memoized context value
   const value = useMemo(() => ({
     currentPath,
@@ -567,9 +625,10 @@ export const FileManagerProvider = ({ children }) => {
     selectedItems,
     loading,
     error,
-    successMessage,
+    successMessage, // Provide success message state
     uploadError, // Provide uploadError state
-    clearUploadError, // Add the clear function
+    clearUploadError, // Function to clear only upload errors
+    clearMessages,    // Function to clear general error/success messages
     // Core actions
     loadItems, // Maybe useful for manual refresh?
     handleCreateFolder,
@@ -668,6 +727,8 @@ export const FileManagerProvider = ({ children }) => {
     newFileModalState, // **NEW** Add new file modal state
     openNewFileModal, // **NEW** Add new file modal controls
     closeNewFileModal,
+    handleZipItem, // Add zip handler
+    handleUnzipItem, // Add unzip handler
   }), [
     currentPath,
     items,
@@ -685,6 +746,7 @@ export const FileManagerProvider = ({ children }) => {
     deleteModalState, // Add dependency
     uploadModalState,
     newFileModalState, // **NEW** Add dependency
+    clearMessages, // Add clearMessages to dependencies
   ]);
 
   return (

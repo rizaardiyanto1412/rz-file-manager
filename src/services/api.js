@@ -320,3 +320,73 @@ export const createFile = async (path, filename) => {
 
   return response.json(); // Return the success response body
 };
+
+/**
+ * Create a zip archive of an item
+ * 
+ * @param {string} path Path to the item
+ * @return {Promise<Object>} API response
+ */
+export const zipItem = async (path) => {
+  const url = `${window.rzFileManagerData?.restUrl}zip`;
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-WP-Nonce': window.rzFileManagerData?.restNonce,
+      },
+      body: JSON.stringify({ path }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = data.message || `HTTP error! status: ${response.status}`;
+      const errorCode = data.code || 'zip_failed';
+      // Throw an error object compatible with how other errors are handled
+      throw { code: errorCode, message: errorMessage, data: data.data || null };
+    }
+
+    return data; // Should contain { success: true, message: '...' }
+  } catch (error) {
+    console.error('Error zipping item:', error);
+    // Re-throw the error object or a new one if needed
+    throw error;
+  }
+};
+
+/**
+ * Unzip an archive
+ * 
+ * @param {string} path Path to the archive
+ * @return {Promise<Object>} API response
+ */
+export const unzipItem = async (path) => {
+  const url = `${window.rzFileManagerData?.restUrl}unzip`;
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-WP-Nonce': window.rzFileManagerData?.restNonce,
+      },
+      body: JSON.stringify({ path }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = data.message || `HTTP error! status: ${response.status}`;
+      const errorCode = data.code || 'unzip_failed';
+      // Throw an error object compatible with how other errors are handled
+      throw { code: errorCode, message: errorMessage, data: data.data || null };
+    }
+
+    return data; // Should contain { success: true, message: '...' }
+  } catch (error) {
+    console.error('Error unzipping item:', error);
+    // Re-throw the error object or a new one if needed
+    throw error;
+  }
+};

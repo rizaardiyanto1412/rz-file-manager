@@ -5,7 +5,22 @@ import { __ } from '@wordpress/i18n';
 import { getDownloadUrl, getZipDownloadUrl } from '../services/api'; // Import download URL functions
 
 const ContextMenu = () => {
-  const { contextMenu, hideContextMenu, openFileEditor, openRenameModal, openDeleteModal } = useFileManager();
+  const { 
+    contextMenu, 
+    hideContextMenu, 
+    openFileEditor, 
+    openRenameModal, 
+    openDeleteModal,
+    handleRenameItem,
+    handleCreateFolder, 
+    handleCreateFile, 
+    handleCopyItems, 
+    handleMoveItems, 
+    handleDownloadItem, 
+    handleDownloadZip, 
+    handleZipItem,    
+    handleUnzipItem,  
+  } = useFileManager();
   const menuRef = useRef(null);
 
   // Effect to handle clicks outside the context menu to close it
@@ -73,6 +88,28 @@ const ContextMenu = () => {
     hideContextMenu(); // Close menu after action
   };
 
+  const handleZip = () => {
+    if (contextMenu.item) {
+      console.log('Zip clicked for:', contextMenu.item.path);
+      handleZipItem(contextMenu.item.path); // Call context handler
+    } else {
+       console.warn('Zip called with invalid selection', contextMenu.item);
+       // Optionally show an error to the user
+    }
+    hideContextMenu();
+  };
+
+  const handleUnzip = () => {
+     if (contextMenu.item && contextMenu.item.name.toLowerCase().endsWith('.zip') && contextMenu.item.type === 'file') {
+       console.log('Unzip clicked for:', contextMenu.item.path);
+       handleUnzipItem(contextMenu.item.path); // Call context handler
+     } else {
+        console.warn('Unzip called with invalid selection', contextMenu.item);
+        // Optionally show an error to the user
+     }
+    hideContextMenu();
+  };
+
   const menuStyle = {
     position: 'absolute',
     top: `${contextMenu.y}px`,
@@ -98,9 +135,23 @@ const ContextMenu = () => {
         </li>
         <li>
           <button onClick={handleRename}>
-            <span className="dashicons dashicons-edit" style={{ marginRight: '5px' }}></span> Rename
+            <span className="dashicons dashicons-tag" style={{ marginRight: '5px' }}></span> Rename
           </button>
         </li>
+        {contextMenu.item.type === 'file' && (
+          <li>
+            <button onClick={handleZip}>
+              <span className="dashicons dashicons-archive" style={{ marginRight: '5px' }}></span> Zip
+            </button>
+          </li>
+        )}
+        {contextMenu.item.name.toLowerCase().endsWith('.zip') && contextMenu.item.type === 'file' && (
+          <li>
+            <button onClick={handleUnzip}>
+              <span className="dashicons dashicons-unlock" style={{ marginRight: '5px' }}></span> Unzip
+            </button>
+          </li>
+        )}
         <li>
           <button onClick={handleDelete} style={{ color: 'red' }}>
             <span className="dashicons dashicons-trash" style={{ marginRight: '5px' }}></span> Delete

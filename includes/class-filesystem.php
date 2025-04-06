@@ -10,6 +10,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-archive.php'; // Include the Archive handler
+
 /**
  * Filesystem class.
  *
@@ -25,6 +27,12 @@ class RZ_File_Manager_Filesystem {
     private $filesystem;
 
     /**
+     * Instance of RZ_File_Manager_Archive.
+     * @var RZ_File_Manager_Archive|null
+     */
+    private $archive_handler;
+
+    /**
      * Root path for file operations.
      *
      * @var string
@@ -37,16 +45,27 @@ class RZ_File_Manager_Filesystem {
      * @param string|null $root_path The root path to use. If null, reads from options or defaults to uploads.
      */
     public function __construct($root_path = null) {
-        // Initialize WordPress Filesystem
-        $this->initialize_filesystem();
-        
-        // Set root path
+        global $wp_filesystem;
+        if (empty($wp_filesystem)) {
+            require_once ABSPATH . '/wp-admin/includes/file.php';
+            if (!WP_Filesystem()) {
+                // Handle error - Filesystem could not be initialized
+                // Maybe throw an exception or set an error state
+                trigger_error(__('Could not initialize WP Filesystem', 'rz-file-manager'), E_USER_WARNING);
+                return;
+            }
+        }
+        $this->filesystem = $wp_filesystem;
+        $this->archive_handler = new RZ_File_Manager_Archive(); // Instantiate Archive handler
+
+        // Determine and validate the root path
+        $upload_dir = wp_upload_dir();
         if ($root_path !== null) {
             $this->root_path = $root_path;
         } else {
             // Fallback to options or default
             $options = get_option('rz_file_manager_options', array());
-            $this->root_path = isset($options['root_path']) ? $options['root_path'] : wp_upload_dir()['basedir'];
+            $this->root_path = isset($options['root_path']) ? $options['root_path'] : $upload_dir['basedir'];
         }
     }
 
@@ -627,6 +646,82 @@ class RZ_File_Manager_Filesystem {
         unlink($zip_path);
 
         exit;
+    }
+
+    /**
+     * Creates a zip archive of a given file or folder.
+     *
+     * @param string $relative_path Relative path from the root directory to the item to zip.
+     * @return bool|WP_Error True on success, WP_Error on failure.
+     */
+    public function create_zip($relative_path) {
+        $absolute_path = $this->validate_path($relative_path);
+        if (!$absolute_path || !$this->filesystem->exists($absolute_path)) {
+            return new WP_Error('invalid_source_path', __('Invalid or non-existent source path specified for zipping.', 'rz-file-manager'));
+        }
+
+        if (!$this->archive_handler) {
+            return new WP_Error('archive_handler_not_initialized', __('Archive handler failed to initialize.', 'rz-file-manager'));
+        }
+
+        // Determine destination zip path
+        $path_parts = pathinfo($absolute_path);
+        $parent_dir = $path_parts['dirname'];
+        $filename   = $path_parts['basename']; // Includes extension for files
+        $destination_zip = trailingslashit($parent_dir) . $filename . '.zip';
+
+        // Prevent zipping the zip file itself if it somehow exists
+        if ($destination_zip === $absolute_path) {
+             return new WP_Error('zip_self_recursion', __('Cannot zip an item into itself.', 'rz-file-manager'));
+        }
+
+        // Check if destination zip already exists (optional: decide whether to overwrite or error)
+        // For now, we rely on ZipArchive::OVERWRITE flag set in the archive handler
+
+        return $this->archive_handler->zip_item($absolute_path, $destination_zip);
+    }
+
+    /**
+     * Extracts a zip archive into a new directory named after the archive.
+     *
+     * @param string $relative_zip_path Relative path from the root directory to the zip file.
+     * @return bool|WP_Error True on success, WP_Error on failure.
+     */
+    public function extract_zip($relative_zip_path) {
+         $absolute_zip_path = $this->validate_path($relative_zip_path);
+
+         if (!$absolute_zip_path || !$this->filesystem->exists($absolute_zip_path) || !$this->filesystem->is_file($absolute_zip_path)) {
+             return new WP_Error('invalid_zip_path', __('Invalid or non-existent zip file specified for extraction.', 'rz-file-manager'));
+         }
+         
+         // Basic check for .zip extension
+         if (strtolower(pathinfo($absolute_zip_path, PATHINFO_EXTENSION)) !== 'zip') {
+             return new WP_Error('not_a_zip_file', __('The specified file is not a zip archive.', 'rz-file-manager'));
+         }
+
+         if (!$this->archive_handler) {
+             return new WP_Error('archive_handler_not_initialized', __('Archive handler failed to initialize.', 'rz-file-manager'));
+         }
+
+         // Determine destination directory
+         $path_parts = pathinfo($absolute_zip_path);
+         $parent_dir = $path_parts['dirname'];
+         $archive_basename = $path_parts['filename']; // Name without extension
+         $destination_dir = trailingslashit($parent_dir) . $archive_basename;
+
+         // Prevent extracting into itself (though unlikely with current naming)
+         if ($destination_dir === $absolute_zip_path) {
+              return new WP_Error('unzip_self_recursion', __('Cannot extract an archive into itself.', 'rz-file-manager'));
+         }
+         
+         // Check if a file/folder with the target extraction name already exists
+         if ($this->filesystem->exists($destination_dir)) {
+             // Decide on behavior: error out, rename (e.g., folder-1), or overwrite? 
+             // Erroring out is safest for now.
+             return new WP_Error('unzip_destination_exists', __('A file or folder with the target extraction name already exists.', 'rz-file-manager'), ['target' => $destination_dir]);
+         }
+         
+         return $this->archive_handler->unzip_item($absolute_zip_path, $destination_dir);
     }
 
     /**
