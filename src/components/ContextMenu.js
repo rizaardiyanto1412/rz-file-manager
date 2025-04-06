@@ -14,6 +14,7 @@ const ContextMenu = () => {
     handleRenameItem,
     handleCreateFolder, 
     handleCreateFile, 
+    selectedItems, // Get selected items array
     handleCopyItems, 
     handleMoveItems, 
     handleDownloadItem, 
@@ -62,11 +63,16 @@ const ContextMenu = () => {
   };
 
   const handleDelete = () => {
-    // Pass the specific item from the context menu to openDeleteModal
-    if (contextMenu.item) {
-      openDeleteModal(contextMenu.item); 
-    }
-    hideContextMenu();
+    // Determine which items to target for deletion
+    const isRightClickedItemSelected = selectedItems.some(item => item.path === contextMenu.item.path);
+    const itemsToDelete = isRightClickedItemSelected ? selectedItems : [contextMenu.item];
+
+    console.log('Delete clicked. Items to target:', itemsToDelete);
+
+    // Open the modal with the determined list of items
+    openDeleteModal(itemsToDelete);
+
+    hideContextMenu(); // Close menu after action
   };
 
   const handleDownload = () => {

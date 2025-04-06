@@ -17,7 +17,6 @@ import { useFileManager } from '../context/FileManagerContext';
  * @param {Object} props Component props
  * @param {Function} props.onCreateFolder Function to open create folder modal
  * @param {Function} props.onUpload Function to open upload modal
- * @param {Function} props.onDelete Function to open delete confirmation modal
  * @return {JSX.Element} The rendered component
  */
 const Toolbar = () => {
@@ -30,7 +29,6 @@ const Toolbar = () => {
     openCreateFolderModal,
     openUploadModal,
     openNewFileModal,
-    handleDeleteSelectedItems,
     loading,
   } = useFileManager();
 
@@ -101,18 +99,6 @@ const Toolbar = () => {
         >
           {__('Upload', 'rz-file-manager')}
         </Button>
-        
-        {hasSelection && (
-          <Button
-            variant="secondary"
-            onClick={handleDeleteSelectedItems}
-            icon="trash"
-            isDestructive
-            className="rz-file-manager__toolbar-button"
-          >
-            {__('Delete', 'rz-file-manager')}
-          </Button>
-        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { Modal, Button } from '@wordpress/components';
 
 /**
@@ -20,47 +20,30 @@ import { useFileManager } from '../../context/FileManagerContext';
 const DeleteConfirmationModal = () => {
   // Get state and methods from context related to single item deletion
   const {
-    deleteModalState, // { isOpen, itemToDelete }
+    deleteModalState, // { isOpen, itemsToDelete }
     closeDeleteModal,
-    handleDeleteItem, // The function for single item delete
+    handleDeleteSelectedItems, // The function for deleting selected items
     loading, // To disable buttons during operation
   } = useFileManager();
 
   // Don't render if the modal isn't open or if there's no item specified
-  if (!deleteModalState.isOpen || !deleteModalState.itemToDelete) {
+  if (!deleteModalState.isOpen || !deleteModalState.itemsToDelete) {
     return null;
   }
 
-  const item = deleteModalState.itemToDelete;
+  // Determine the message based on the number of items
+  const itemCount = deleteModalState.itemsToDelete.length;
+  const message = itemCount === 1
+    ? sprintf(__('Are you sure you want to delete "%s"?', 'rz-file-manager'), deleteModalState.itemsToDelete[0]?.name)
+    : sprintf(__('Are you sure you want to delete %d selected items?', 'rz-file-manager'), itemCount);
 
   /**
    * Handle confirm button click
    */
   const handleConfirm = () => {
-    // Call the context function designed for single item deletion
-    handleDeleteItem();
+    // Call the context function designed for deleting selected items
+    handleDeleteSelectedItems();
     // This function will handle API call, loading state, and closing the modal
-  };
-
-  /**
-   * Get confirmation message for the single item
-   *
-   * @return {string} Confirmation message
-   */
-  const getConfirmationMessage = () => {
-    if (!item) return ''; // Should not happen due to the check above
-
-    if (item.type === 'directory') {
-      return __(
-        `Are you sure you want to delete the folder "${item.name}" and all its contents? This action cannot be undone.`,
-        'rz-file-manager'
-      );
-    } else {
-      return __(
-        `Are you sure you want to delete the file "${item.name}"? This action cannot be undone.`,
-        'rz-file-manager'
-      );
-    }
   };
 
   return (
@@ -72,13 +55,7 @@ const DeleteConfirmationModal = () => {
       shouldCloseOnEsc={true} // Allow Esc key to close
     >
       <div className="rz-file-manager__modal-content">
-        <p>{getConfirmationMessage()}</p>
-        {/* Optional: Can add more details about the item here if needed */}
-        {/* 
-          <p>
-            <strong>{item.name}</strong> ({item.type})
-          </p>
-        */}
+        <p>{message}</p>
         <p className="rz-fm-delete-warning">
           {__('This action cannot be undone.', 'rz-file-manager')}
         </p>

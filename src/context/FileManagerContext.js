@@ -71,7 +71,7 @@ export const FileManagerProvider = ({ children }) => {
   const [createFolderModalState, setCreateFolderModalState] = useState({ isOpen: false });
 
   // State for Delete Confirmation Modal
-  const [deleteModalState, setDeleteModalState] = useState({ isOpen: false, itemToDelete: null });
+  const [deleteModalState, setDeleteModalState] = useState({ isOpen: false, itemsToDelete: [] }); // Store array of items
 
   // State for Upload Modal
   const [uploadModalState, setUploadModalState] = useState({ isOpen: false });
@@ -267,42 +267,57 @@ export const FileManagerProvider = ({ children }) => {
   /**
    * Delete SELECTED items
    */
-  const handleDeleteSelectedItems = async () => {
-    if (selectedItems.length === 0) return;
-    
+  const handleDeleteSelectedItems = useCallback(async () => {
+    const items = deleteModalState.itemsToDelete;
+    if (!items || items.length === 0) {
+      console.error('No items selected for deletion in modal state.');
+      closeDeleteModal();
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccessMessage(null); // Clear previous success message
-    
+    closeDeleteModal(); // Close modal first
+
     try {
       // Delete each selected item
-      for (const item of selectedItems) {
-        const response = await deleteItem(item.path);
-        
-        if (!response.success) {
-          setError(`Failed to delete ${item.name}: ${response.message || 'Unknown error'}`);
-          break;
-        }
+      const promises = items.map(item => deleteItem(item.path));
+      const results = await Promise.allSettled(promises);
+
+      const failedDeletions = results.filter(result => result.status === 'rejected');
+      const successfulDeletions = results.filter(result => result.status === 'fulfilled' && result.value.success);
+
+      if (failedDeletions.length > 0) {
+        console.error('Failed deletions:', failedDeletions);
+        // Combine error messages or show a generic one
+        const errorMessages = failedDeletions.map(fail => fail.reason?.message || `Failed to delete an item.`);
+        setError(`Failed to delete ${failedDeletions.length} item(s). Errors: ${errorMessages.join(', ')}`);
       }
       
-      setSuccessMessage('Items deleted successfully');
-      // Clear selection and reload items
-      setSelectedItems([]);
-      await loadItems();
+      if (successfulDeletions.length > 0) {
+        setSuccessMessage(`${successfulDeletions.length} item(s) deleted successfully.`);
+      }
+
+      // Refresh the list after deletion
+      await loadItems(currentPath);
+
     } catch (err) {
-      setError('Error deleting items: ' + (err.message || 'Unknown error'));
+      console.error('Deletion failed:', err);
+      // This catch might be less necessary now with Promise.allSettled handling individual errors
+      setError(err.message || 'An unexpected error occurred during deletion.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPath, deleteModalState.itemsToDelete]); // Depend on the array of items
 
   /**
    * Delete a SINGLE item
    */
   const handleDeleteItem = async () => {
-    if (!deleteModalState.itemToDelete) return; // Safety check
+    if (!deleteModalState.itemsToDelete || deleteModalState.itemsToDelete.length === 0) return; // Safety check
 
-    const item = deleteModalState.itemToDelete;
+    const item = deleteModalState.itemsToDelete[0];
     setLoading(true);
     setError(null);
     setSuccessMessage(null); // Clear previous success message
@@ -511,17 +526,21 @@ export const FileManagerProvider = ({ children }) => {
   /**
    * Open the delete confirmation modal.
    *
-   * @param {Object} item The item to delete.
+   * @param {Object[]} items The items to potentially delete.
    */
-  const openDeleteModal = (item) => {
-    setDeleteModalState({ isOpen: true, itemToDelete: item });
-  };
+  const openDeleteModal = useCallback((items) => {
+    if (!items || items.length === 0) {
+      console.warn('openDeleteModal called with no items.');
+      return;
+    }
+    setDeleteModalState({ isOpen: true, itemsToDelete: items });
+  }, []);
 
   /**
    * Close the delete confirmation modal.
    */
   const closeDeleteModal = () => {
-    setDeleteModalState({ isOpen: false, itemToDelete: null });
+    setDeleteModalState({ isOpen: false, itemsToDelete: [] });
   };
 
   /**
