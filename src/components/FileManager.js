@@ -2,7 +2,7 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { useState } from '@wordpress/element';
+import { useState, useContext, useEffect } from '@wordpress/element';
 import { Spinner } from '@wordpress/components';
 
 /**
@@ -16,6 +16,7 @@ import CreateFolderModal from './Modals/CreateFolderModal';
 import RenameModal from './Modals/RenameModal';
 import DeleteConfirmationModal from './Modals/DeleteConfirmationModal';
 import UploadModal from './Modals/UploadModal';
+import ContextMenu from './ContextMenu';
 
 /**
  * FileManager component
@@ -26,7 +27,7 @@ import UploadModal from './Modals/UploadModal';
  */
 const FileManager = () => {
   // Get state and methods from context
-  const { loading, error, clearError, successMessage, clearMessages } = useFileManager();
+  const { loading, error, clearError, successMessage, clearMessages, hideContextMenu } = useFileManager();
   
   // State for modals
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
@@ -59,8 +60,13 @@ const FileManager = () => {
     setIsDeleteModalOpen(true);
   };
 
+  // Click handler to close context menu
+  const handleWrapperClick = () => {
+    hideContextMenu();
+  };
+
   return (
-    <div className="rz-file-manager">
+    <div className="rz-file-manager" onClick={handleWrapperClick}>
       {/* Messages */}
       {error && (
         <div className="rz-file-manager__error">
@@ -116,6 +122,9 @@ const FileManager = () => {
           onClose={() => setIsDeleteModalOpen(false)}
         />
       )}
+
+      {/* Context Menu */}
+      <ContextMenu />
     </div>
   );
 };

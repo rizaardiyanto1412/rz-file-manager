@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { createContext, useState, useContext, useEffect } from '@wordpress/element';
+import { createContext, useState, useContext, useEffect, useCallback } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -39,6 +39,14 @@ export const FileManagerProvider = ({ children }) => {
   
   // State for success messages
   const [successMessage, setSuccessMessage] = useState(null);
+
+  // State for context menu
+  const [contextMenu, setContextMenu] = useState({ 
+    visible: false, 
+    x: 0, 
+    y: 0, 
+    item: null 
+  });
 
   /**
    * Load files and folders for the current path
@@ -240,6 +248,24 @@ export const FileManagerProvider = ({ children }) => {
     setSuccessMessage(null);
   };
 
+  // Function to show the context menu
+  const showContextMenu = useCallback((item, event) => {
+    event.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: event.clientX,
+      y: event.clientY,
+      item: item,
+    });
+  }, []);
+
+  // Function to hide the context menu
+  const hideContextMenu = useCallback(() => {
+    if (contextMenu.visible) {
+      setContextMenu({ ...contextMenu, visible: false, item: null });
+    }
+  }, [contextMenu]);
+
   // Load items when current path changes
   useEffect(() => {
     loadItems();
@@ -275,6 +301,9 @@ export const FileManagerProvider = ({ children }) => {
     handleDeleteItems,
     handleRenameItem,
     reloadItems: loadItems,
+    contextMenu,
+    showContextMenu,
+    hideContextMenu,
   };
 
   return (

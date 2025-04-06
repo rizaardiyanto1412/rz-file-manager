@@ -63,6 +63,14 @@
   gap: 10px;
 }
 
+.rz-file-manager-toolbar__path {
+  flex-grow: 1;
+  margin: 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Breadcrumbs */
 .rz-file-manager__breadcrumbs {
   background-color: #f9f9f9;
@@ -153,11 +161,11 @@
 }
 
 .rz-file-manager__file-item:hover {
-  background-color: #f9f9f9;
+  background-color: #f0f0f0;
 }
 
 .rz-file-manager__file-item.is-selected {
-  background-color: #f0f6fc;
+  background-color: #e0e0e0;
 }
 
 .rz-file-manager__file-icon {
@@ -193,6 +201,34 @@
   max-height: 200px;
   overflow-y: auto;
   padding: 10px 15px;
+}
+
+/* Context Menu Styling */
+.rz-file-manager-context-menu {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  min-width: 150px;
+}
+
+.rz-file-manager-context-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 5px 0;
+}
+
+.rz-file-manager-context-menu li button {
+  background: none;
+  border: none;
+  padding: 8px 15px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.rz-file-manager-context-menu li button:hover {
+  background-color: #f0f0f0;
 }
 
 /* Responsive */

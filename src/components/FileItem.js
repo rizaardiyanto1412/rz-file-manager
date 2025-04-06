@@ -9,6 +9,7 @@ import { Button } from '@wordpress/components';
  */
 import { useFileManager } from '../context/FileManagerContext';
 import { getDownloadUrl } from '../services/api';
+import { formatFileSize, formatDate } from '../utils/formatters';
 
 /**
  * FileItem component
@@ -26,36 +27,9 @@ const FileItem = ({ item, onRename }) => {
     navigateTo, 
     toggleSelectItem, 
     isItemSelected,
+    showContextMenu,
     handleDeleteItems,
   } = useFileManager();
-
-  /**
-   * Format file size
-   * 
-   * @param {number} bytes File size in bytes
-   * @return {string} Formatted file size
-   */
-  const formatFileSize = (bytes, decimals = 2) => {
-    if (bytes === 0) return '0 Bytes';
-    
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-  };
-
-  /**
-   * Format date
-   * 
-   * @param {number} timestamp Unix timestamp
-   * @return {string} Formatted date
-   */
-  const formatDate = (timestamp) => {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleString();
-  };
 
   /**
    * Handle item click
@@ -63,10 +37,11 @@ const FileItem = ({ item, onRename }) => {
    * @param {Event} event Click event
    */
   const handleItemClick = (event) => {
-    // If it's a directory, navigate to it
-    if (item.type === 'directory') {
-      navigateTo(item.path);
-    }
+    // Check if shift or ctrl/cmd key is pressed for multi-select
+    const isShiftPressed = event.shiftKey;
+    const isCtrlCmdPressed = event.ctrlKey || event.metaKey; // metaKey for Mac Command
+
+    toggleSelectItem(item, isShiftPressed, isCtrlCmdPressed);
   };
 
   /**
@@ -78,6 +53,16 @@ const FileItem = ({ item, onRename }) => {
     if (item.type === 'directory') {
       navigateTo(item.path);
     }
+  };
+
+  /**
+   * Handle right click (context menu)
+   * 
+   * @param {Event} event Context menu event
+   */
+  const handleContextMenu = (event) => {
+    event.preventDefault(); // Prevent default browser context menu
+    showContextMenu(item, event);
   };
 
   /**
@@ -112,66 +97,63 @@ const FileItem = ({ item, onRename }) => {
   };
 
   /**
-   * Get item icon based on type
+   * Get icon based on item type and extension
    * 
    * @return {string} Dashicon name
    */
   const getItemIcon = () => {
     if (item.type === 'directory') {
-      return 'portfolio';
+      return 'portfolio'; // Using portfolio as folder icon
     }
-    
+
     // Determine icon based on file extension
     const extension = item.name.split('.').pop().toLowerCase();
-    
     switch (extension) {
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
-      case 'svg':
+      case 'bmp':
         return 'format-image';
       case 'pdf':
-        return 'pdf';
+        return 'media-document';
       case 'doc':
       case 'docx':
-        return 'media-document';
+        return 'media-text'; // Could use a more specific one if available
       case 'xls':
       case 'xlsx':
         return 'media-spreadsheet';
       case 'ppt':
       case 'pptx':
-        return 'media-interactive';
+        return 'media-interactive'; // Or media-presentation if WP adds one
       case 'zip':
       case 'rar':
-      case 'tar':
-      case 'gz':
-        return 'archive';
+      case '7z':
+        return 'portfolio'; // Re-using portfolio for archives
       case 'txt':
       case 'md':
-        return 'media-text';
-      case 'php':
-      case 'js':
-      case 'css':
-      case 'html':
-        return 'editor-code';
+        return 'text-page';
       default:
-        return 'media-default';
+        return 'media-default'; // Generic file icon
     }
   };
 
   return (
-    <tr 
+    <tr
       className={`rz-file-manager__file-item ${isItemSelected(item) ? 'is-selected' : ''}`}
       onClick={handleItemClick}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
     >
       <td className="rz-file-manager__table-checkbox">
-        <input 
-          type="checkbox" 
+        <input
+          type="checkbox"
           checked={isItemSelected(item)}
-          onChange={handleCheckboxChange}
-          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => {
+            e.stopPropagation(); // Prevent row click when clicking checkbox
+            handleCheckboxChange(e);
+          }}
+          aria-label={`Select ${item.name}`}
         />
       </td>
       <td className="rz-file-manager__table-name">
@@ -179,35 +161,10 @@ const FileItem = ({ item, onRename }) => {
         {item.name}
       </td>
       <td className="rz-file-manager__table-size">
-        {item.type === 'directory' ? '--' : formatFileSize(item.size)}
+        {item.type === 'directory' ? '-' : formatFileSize(item.size)}
       </td>
       <td className="rz-file-manager__table-modified">
         {formatDate(item.modified)}
-      </td>
-      <td className="rz-file-manager__table-actions">
-        {item.type !== 'directory' && (
-          <a 
-            href={getDownloadUrl(item.path)}
-            className="button button-small"
-            onClick={(e) => e.stopPropagation()}
-            download
-          >
-            {__('Download', 'rz-file-manager')}
-          </a>
-        )}
-        <Button 
-          isSmall
-          onClick={handleRenameClick}
-        >
-          {__('Rename', 'rz-file-manager')}
-        </Button>
-        <Button 
-          isSmall
-          isDestructive
-          onClick={handleDeleteClick}
-        >
-          {__('Delete', 'rz-file-manager')}
-        </Button>
       </td>
     </tr>
   );
