@@ -4,7 +4,7 @@ import { useFileManager } from '../context/FileManagerContext';
 import { __ } from '@wordpress/i18n';
 
 const ContextMenu = () => {
-  const { contextMenu, hideContextMenu, openFileEditor } = useFileManager();
+  const { contextMenu, hideContextMenu, openFileEditor, openRenameModal, openDeleteModal } = useFileManager();
   const menuRef = useRef(null);
 
   // Effect to handle clicks outside the context menu to close it
@@ -31,16 +31,6 @@ const ContextMenu = () => {
     return null; // Don't render if not visible or no item
   }
 
-  const handleActionClick = (action) => {
-    console.log(`${action} clicked for:`, contextMenu.item.name);
-    // Here you would call the appropriate action from context,
-    // passing contextMenu.item as needed.
-    // Example:
-    // if (action === 'Rename') openRenameModal(contextMenu.item);
-    // if (action === 'Delete') openDeleteModal([contextMenu.item]); // Assuming delete takes an array
-    hideContextMenu(); // Close menu after action
-  };
-
   const handleEdit = () => {
     if (contextMenu.item && contextMenu.item.type === 'file') {
       openFileEditor(contextMenu.item);
@@ -50,9 +40,17 @@ const ContextMenu = () => {
 
   const handleRename = () => {
     console.log('Rename clicked for:', contextMenu.item.name);
-    // Here you would call the appropriate action from context,
-    // passing contextMenu.item as needed.
+    if (contextMenu.item) {
+      openRenameModal(contextMenu.item);
+    }
     hideContextMenu(); // Close menu after action
+  };
+
+  const handleDelete = () => {
+    console.log('Delete clicked for:', contextMenu.item?.name); // Optional chaining for safety
+    // Currently opens a generic delete modal. Could be enhanced to pass the item.
+    openDeleteModal();
+    hideContextMenu();
   };
 
   const menuStyle = {
@@ -65,7 +63,6 @@ const ContextMenu = () => {
 
   const menuContent = (
     <div ref={menuRef} className="rz-file-manager-context-menu" style={menuStyle}>
-      {console.log("Context Menu Applied Style:", menuStyle)}
       <ul>
         {contextMenu.item.type === 'file' && (
           <li>
@@ -80,7 +77,7 @@ const ContextMenu = () => {
           </button>
         </li>
         <li>
-          <button onClick={() => handleActionClick('Delete')} style={{ color: 'red' }}>
+          <button onClick={handleDelete} style={{ color: 'red' }}>
             <span className="dashicons dashicons-trash" style={{ marginRight: '5px' }}></span> Delete
           </button>
         </li>

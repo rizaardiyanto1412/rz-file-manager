@@ -34,6 +34,7 @@ const RenameModal = ({ isOpen, onClose, item }) => {
   // Set initial name when item changes
   useEffect(() => {
     if (item) {
+      console.log('[RenameModal] Item received:', item);
       setNewName(item.name);
     }
   }, [item]);
@@ -65,9 +66,12 @@ const RenameModal = ({ isOpen, onClose, item }) => {
     }
     
     // Rename item
+    console.log('[RenameModal] Calling handleRenameItem with:', { path: item.path, newName });
+    console.log('[RenameModal] typeof handleRenameItem:', typeof handleRenameItem);
     handleRenameItem(item.path, newName);
     
     // Close modal
+    console.log('[RenameModal] typeof onClose:', typeof onClose);
     onClose();
   };
 

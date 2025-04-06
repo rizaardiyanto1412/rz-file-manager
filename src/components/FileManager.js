@@ -2,7 +2,7 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { useState, useContext, useEffect } from '@wordpress/element';
+import { useContext, useEffect } from '@wordpress/element';
 import { Spinner } from '@wordpress/components';
 
 /**
@@ -28,38 +28,23 @@ import ContextMenu from './ContextMenu';
  */
 const FileManager = () => {
   // Get state and methods from context
-  const { loading, error, clearError, successMessage, clearMessages, hideContextMenu } = useFileManager();
-  
-  // State for modals
-  const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [itemToRename, setItemToRename] = useState(null);
-
-  /**
-   * Open create folder modal
-   */
-  const openCreateFolderModal = () => {
-    setIsCreateFolderModalOpen(true);
-  };
-
-  /**
-   * Open rename modal
-   * 
-   * @param {Object} item Item to rename
-   */
-  const openRenameModal = (item) => {
-    setItemToRename(item);
-    setIsRenameModalOpen(true);
-  };
-
-  /**
-   * Open delete confirmation modal
-   */
-  const openDeleteModal = () => {
-    setIsDeleteModalOpen(true);
-  };
+  const {
+    loading,
+    error,
+    successMessage,
+    clearMessages,
+    // Modals from context
+    renameModalState,
+    openRenameModal,
+    closeRenameModal,
+    createFolderModalState,
+    openCreateFolderModal,
+    closeCreateFolderModal,
+    deleteModalState,
+    openDeleteModal,
+    closeDeleteModal,
+    hideContextMenu,
+  } = useFileManager();
 
   // Click handler to close context menu
   const handleWrapperClick = () => {
@@ -98,29 +83,29 @@ const FileManager = () => {
           <Spinner />
         </div>
       ) : (
-        <FileList onRename={openRenameModal} />
+        <FileList />
       )}
 
-      {/* Modals */}
-      {isCreateFolderModalOpen && (
-        <CreateFolderModal 
-          isOpen={isCreateFolderModalOpen}
-          onClose={() => setIsCreateFolderModalOpen(false)}
+      {/* Modals - Use context state and functions */}
+      {createFolderModalState.isOpen && (
+        <CreateFolderModal
+          isOpen={createFolderModalState.isOpen}
+          onClose={closeCreateFolderModal}
         />
       )}
 
-      {isRenameModalOpen && itemToRename && (
-        <RenameModal 
-          isOpen={isRenameModalOpen}
-          onClose={() => setIsRenameModalOpen(false)}
-          item={itemToRename}
+      {renameModalState.isOpen && (
+        <RenameModal
+          isOpen={renameModalState.isOpen}
+          onClose={closeRenameModal}
+          item={renameModalState.item} // Get item from context state
         />
       )}
 
-      {isDeleteModalOpen && (
-        <DeleteConfirmationModal 
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
+      {deleteModalState.isOpen && (
+        <DeleteConfirmationModal
+          isOpen={deleteModalState.isOpen}
+          onClose={closeDeleteModal}
         />
       )}
 

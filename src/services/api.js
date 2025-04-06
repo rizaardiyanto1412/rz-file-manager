@@ -16,12 +16,9 @@ const API_BASE_PATH = '/rz-file-manager/v1'; // Path relative to /wp-json/
  */
 export const fetchFiles = async (path = '') => {
   try {
-    console.log('fetchFiles called with path:', path);
-    console.log('rzFileManager object:', window.rzFileManager);
 
     // Construct the full URL for the standard fetch call
     const listUrl = `${window.rzFileManager?.restUrl}list`; // Note: restUrl already includes the base path and slash
-    console.log('Attempting standard fetch with URL:', listUrl);
 
     // --- Using standard fetch instead ---
     const response = await fetch(`${listUrl}?path=${encodeURIComponent(path)}`, {
@@ -134,7 +131,8 @@ export const renameItem = async (path, newName) => {
     const response = await apiFetch({
       path: `${API_BASE_PATH}/rename`,
       method: 'POST',
-      data: { path, newName },
+      // Use the parameter name expected by the backend API ('new_name')
+      data: { path, new_name: newName }, 
     });
     return response;
   } catch (error) {

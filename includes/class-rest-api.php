@@ -140,7 +140,6 @@ class RZ_File_Manager_REST_API {
                     ),
                     'new_name' => array(
                         'required'          => true,
-                        'sanitize_callback' => 'sanitize_text_field',
                     ),
                 ),
             )

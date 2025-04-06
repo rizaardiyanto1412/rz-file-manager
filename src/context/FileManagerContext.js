@@ -61,6 +61,18 @@ export const FileManagerProvider = ({ children }) => {
     error: null,
   });
 
+  // State for Rename Modal
+  const [renameModalState, setRenameModalState] = useState({
+    isOpen: false,
+    item: null,
+  });
+
+  // State for Create Folder Modal
+  const [createFolderModalState, setCreateFolderModalState] = useState({ isOpen: false });
+
+  // State for Delete Confirmation Modal
+  const [deleteModalState, setDeleteModalState] = useState({ isOpen: false });
+
   /**
    * Load files and folders for the current path
    */
@@ -210,19 +222,23 @@ export const FileManagerProvider = ({ children }) => {
   const handleRenameItem = async (path, newName) => {
     setLoading(true);
     setError(null);
+    console.log('[FileManagerContext] handleRenameItem called:', { path, newName });
     
     try {
       const response = await renameItem(path, newName);
+      console.log('[FileManagerContext] API response for renameItem:', response);
       
       if (response.success) {
         setSuccessMessage(response.message || 'Item renamed successfully');
-        // Reload items to show the renamed item
+        console.log('[FileManagerContext] Renaming successful, reloading items...');
         await loadItems();
       } else {
         setError(response.message || 'Failed to rename item');
+        console.error('[FileManagerContext] Renaming failed:', response.message);
       }
     } catch (err) {
       setError('Error renaming item: ' + (err.message || 'Unknown error'));
+      console.error('[FileManagerContext] Error in handleRenameItem:', err);
     } finally {
       setLoading(false);
     }
@@ -347,7 +363,6 @@ export const FileManagerProvider = ({ children }) => {
       y: event.pageY,
       item: item,
     });
-    console.log('Context Menu Event - Captured Coords:', { clientX: event.clientX, clientY: event.clientY, pageX: event.pageX, pageY: event.pageY });
   };
 
   /**
@@ -355,6 +370,51 @@ export const FileManagerProvider = ({ children }) => {
    */
   const hideContextMenu = () => {
     setContextMenu(prev => ({ ...prev, visible: false, item: null }));
+  };
+
+  /**
+   * Open the rename modal.
+   *
+   * @param {Object} item The item to rename.
+   */
+  const openRenameModal = (item) => {
+    setRenameModalState({ isOpen: true, item: item });
+  };
+
+  /**
+   * Close the rename modal.
+   */
+  const closeRenameModal = () => {
+    setRenameModalState({ isOpen: false, item: null });
+  };
+
+  /**
+   * Open the create folder modal.
+   */
+  const openCreateFolderModal = () => {
+    setCreateFolderModalState({ isOpen: true });
+  };
+
+  /**
+   * Close the create folder modal.
+   */
+  const closeCreateFolderModal = () => {
+    setCreateFolderModalState({ isOpen: false });
+  };
+
+  /**
+   * Open the delete confirmation modal.
+   */
+  const openDeleteModal = () => {
+    // We might enhance this later to pass the items to be deleted
+    setDeleteModalState({ isOpen: true });
+  };
+
+  /**
+   * Close the delete confirmation modal.
+   */
+  const closeDeleteModal = () => {
+    setDeleteModalState({ isOpen: false });
   };
 
   /**
@@ -467,24 +527,60 @@ export const FileManagerProvider = ({ children }) => {
     loading,
     error,
     successMessage,
+    // Core actions
+    loadItems, // Maybe useful for manual refresh?
+    handleCreateFolder,
+    handleUploadFiles,
+    handleDeleteItems,
+    handleRenameItem,
+    // Navigation
     navigateTo,
     navigateToParent,
+    // Selection
     toggleSelectItem,
     toggleSelectAll, // Expose the new function
     areAllItemsSelected: items.length > 0 && selectedItems.length === items.length, // Derived state
     isItemSelected,
+    clearSelection, // Added clearSelection
+    // Sorting
     sortKey,
     sortDirection,
     setSort,
+    // Context Menu
     contextMenu,
     showContextMenu,
     hideContextMenu,
+    // File Editor
     editorState,
     openFileEditor,
     closeFileEditor,
     saveEditedFile,
     handleEditorContentChange,
-  }), [currentPath, items, selectedItems, loading, error, successMessage, sortKey, sortDirection, contextMenu, editorState]);
+    // Modals State & Controls
+    renameModalState,
+    openRenameModal,
+    closeRenameModal,
+    createFolderModalState,
+    openCreateFolderModal,
+    closeCreateFolderModal,
+    deleteModalState,
+    openDeleteModal,
+    closeDeleteModal,
+  }), [
+    currentPath,
+    items,
+    selectedItems,
+    loading,
+    error,
+    successMessage,
+    sortKey,
+    sortDirection,
+    contextMenu,
+    editorState,
+    renameModalState,
+    createFolderModalState,
+    deleteModalState,
+  ]);
 
   return (
     <FileManagerContext.Provider value={value}>
