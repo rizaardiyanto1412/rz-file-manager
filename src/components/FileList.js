@@ -83,7 +83,6 @@ const FileList = ({ onRename }) => {
               {__('Modified', 'rz-file-manager')}
               {getSortIndicator('modified')}
             </th>
-            <th className="rz-file-manager__table-actions">{__('Actions', 'rz-file-manager')}</th>
           </tr>
         </thead>
         <tbody>
