@@ -38,11 +38,11 @@ const FileItem = ({ item, onRename }) => {
    * @param {Event} event Click event
    */
   const handleItemClick = (event) => {
-    // Check if shift or ctrl/cmd key is pressed for multi-select
-    const isShiftPressed = event.shiftKey;
-    const isCtrlCmdPressed = event.ctrlKey || event.metaKey; // metaKey for Mac Command
-
-    toggleSelectItem(item, isShiftPressed, isCtrlCmdPressed);
+    // NOTE: We REMOVED toggleSelectItem from the row click.
+    // Selection is now handled ONLY by the checkbox onChange.
+    // We might want to add other single-click actions here later, 
+    // like previewing a file, but for now, single-clicking the row does nothing
+    // other than prepare for a double-click or context menu.
   };
 
   /**
@@ -75,6 +75,7 @@ const FileItem = ({ item, onRename }) => {
    */
   const handleCheckboxChange = (event) => {
     event.stopPropagation();
+    // Only toggle selection when the checkbox itself is changed
     toggleSelectItem(item);
   };
 
