@@ -81,7 +81,7 @@ class RZ_File_Manager_REST_API {
             '/create-folder',
             array(
                 'methods'             => WP_REST_Server::CREATABLE,
-                'callback'            => array($this, 'create_folder'),
+                'callback'            => array($this, 'handle_create_folder_request'),
                 'permission_callback' => array($this, 'check_permissions'),
                 'args'                => array(
                     'path' => array(
@@ -90,7 +90,28 @@ class RZ_File_Manager_REST_API {
                     ),
                     'name' => array(
                         'required'          => true,
+                        'sanitize_callback' => 'sanitize_file_name',
+                    ),
+                ),
+            )
+        );
+
+        // Register route for creating files
+        register_rest_route(
+            $this->namespace,
+            '/create-file',
+            array(
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => array($this, 'handle_create_file_request'),
+                'permission_callback' => array($this, 'check_permissions'),
+                'args'                => array(
+                    'path' => array(
+                        'required'          => true,
                         'sanitize_callback' => 'sanitize_text_field',
+                    ),
+                    'filename' => array(
+                        'required'          => true,
+                        'sanitize_callback' => 'sanitize_file_name',
                     ),
                 ),
             )
@@ -105,7 +126,7 @@ class RZ_File_Manager_REST_API {
                 'callback'            => array($this, 'handle_upload_file'),
                 'permission_callback' => array($this, 'check_permissions'),
                 'args'                => array(
-                    'current_path' => array( // <-- Change 'path' to 'current_path'
+                    'current_path' => array(
                         'required'          => true,
                         'sanitize_callback' => 'sanitize_text_field',
                     ),
@@ -349,7 +370,7 @@ class RZ_File_Manager_REST_API {
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_REST_Response|WP_Error Response object or WP_Error.
      */
-    public function create_folder($request) {
+    public function handle_create_folder_request($request) {
         // Get parameters
         $path = $request->get_param('path');
         $name = $request->get_param('name');
@@ -377,36 +398,112 @@ class RZ_File_Manager_REST_API {
     }
 
     /**
+     * Create a new file.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     * @return WP_REST_Response|WP_Error Response object or WP_Error.
+     */
+    public function handle_create_file_request($request) {
+        $relative_path = $request->get_param('path');
+        $filename      = $request->get_param('filename');
+
+        // Get the base uploads directory
+        $base_dir = $this->filesystem->get_root_path();
+        if (is_wp_error($base_dir)) {
+            error_log('[PHP REST API] handle_create_file_request: Error getting base directory: ' . $base_dir->get_error_message());
+            return new WP_Error('base_dir_error', __('Could not determine base directory.', 'rz-file-manager'), array('status' => 500));
+        }
+
+        $full_dir_path = $this->filesystem->validate_path($relative_path); // Use validate_path from filesystem
+
+        // Check if validate_path returned an error or if it's not a directory
+        if (is_wp_error($full_dir_path) || !$this->filesystem->is_dir($full_dir_path)) {
+            error_log('[PHP REST API] handle_create_file_request: Invalid directory path resolved: ' . (is_wp_error($full_dir_path) ? $full_dir_path->get_error_message() : $full_dir_path));
+            return $full_dir_path instanceof WP_Error ? $full_dir_path : new WP_Error('invalid_directory_path', __('Invalid or non-existent directory path specified.', 'rz-file-manager'), array('status' => 400));
+        }
+
+        // Basic validation for filename
+        if (empty($filename)) {
+            return new WP_Error(
+                'empty_filename',
+                __('Filename cannot be empty.', 'rz-file-manager'),
+                array('status' => 400)
+            );
+        }
+
+        // Check for invalid characters (basic check, might need refinement)
+        if (preg_match('/[\/\\\\:*?\"<>|]/', $filename)) {
+            return new WP_Error(
+                'invalid_filename',
+                __('Filename contains invalid characters.', 'rz-file-manager'),
+                array('status' => 400)
+            );
+        }
+
+        $full_file_path = $full_dir_path . DIRECTORY_SEPARATOR . $filename;
+
+        // Check if file already exists
+        if (file_exists($full_file_path)) {
+            return new WP_Error(
+                'file_exists',
+                __('File already exists.', 'rz-file-manager'),
+                array('status' => 400)
+            );
+        }
+
+        // Attempt to create an empty file
+        $file_handle = @fopen($full_file_path, 'w');
+        if ($file_handle !== false) {
+            fclose($file_handle);
+            // Optionally set permissions, e.g., chmod($full_file_path, 0644);
+            return new WP_REST_Response(
+                array(
+                    'success' => true,
+                    'message' => __('File created successfully.', 'rz-file-manager'),
+                ),
+                201
+            );
+        } else {
+            // Could also use file_put_contents($full_file_path, '') === false as a check
+            return new WP_Error(
+                'create_file_error',
+                __('Could not create file. Check permissions.', 'rz-file-manager'),
+                array('status' => 500)
+            );
+        }
+    }
+
+    /**
      * Upload a file.
      *
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_REST_Response|WP_Error Response object or WP_Error.
      */
     public function handle_upload_file($request) {
-        $current_path = $request->get_param('current_path'); // <-- Change 'path' to 'current_path'
-        error_log('[PHP REST API] handle_upload_file: Received request.'); // Log entry
-        error_log('[PHP REST API] handle_upload_file: current_path = ' . print_r($current_path, true)); // Log path
-        error_log('[PHP REST API] handle_upload_file: $_FILES = ' . print_r($_FILES, true)); // Log FILES array
+        $current_path = $request->get_param('current_path');
+        error_log('[PHP REST API] handle_upload_file: Received request.');
+        error_log('[PHP REST API] handle_upload_file: current_path = ' . print_r($current_path, true));
+        error_log('[PHP REST API] handle_upload_file: $_FILES = ' . print_r($_FILES, true));
 
         // Basic validation
-        if (!isset($_FILES['file'])) { // Key 'file' must match FormData key
-             error_log('[PHP REST API] handle_upload_file: Error - $_FILES["file"] not set.');
-             return new WP_REST_Response(['success' => false, 'message' => 'No file data received.'], 400);
+        if (!isset($_FILES['file'])) {
+            error_log('[PHP REST API] handle_upload_file: Error - $_FILES["file"] not set.');
+            return new WP_REST_Response(['success' => false, 'message' => 'No file data received.'], 400);
         }
 
         // Check for upload errors
         if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-             error_log('[PHP REST API] handle_upload_file: Error - Upload error code: ' . $_FILES['file']['error']);
-             return new WP_REST_Response(['success' => false, 'message' => $this->get_upload_error_message($_FILES['file']['error'])], 400);
+            error_log('[PHP REST API] handle_upload_file: Error - Upload error code: ' . $_FILES['file']['error']);
+            return new WP_REST_Response(['success' => false, 'message' => $this->get_upload_error_message($_FILES['file']['error'])], 400);
         }
 
-        $file = $_FILES['file']; // Process the single file
+        $file = $_FILES['file'];
 
         try {
             // Assume $this->filesystem is an instance of your Filesystem class
             error_log('[PHP REST API] handle_upload_file: Calling filesystem->upload_file...');
             $result = $this->filesystem->upload_file($current_path, $file);
-            error_log('[PHP REST API] handle_upload_file: Filesystem result: ' . print_r($result, true)); // Log filesystem result
+            error_log('[PHP REST API] handle_upload_file: Filesystem result: ' . print_r($result, true));
 
             // Check if the filesystem operation returned exactly true
             if ($result === true) {
@@ -415,17 +512,17 @@ class RZ_File_Manager_REST_API {
             } else {
                 // Handle WP_Error specifically
                 if (is_wp_error($result)) {
-                    $message = $result->get_error_message(); // Get the specific error message
+                    $message = $result->get_error_message();
                     error_log('[PHP REST API] handle_upload_file: Upload failed (WP_Error). Message: ' . $message);
                 } else {
                     // Handle other failures (e.g., if filesystem returned false)
                     $message = is_array($result) && isset($result['message']) ? $result['message'] : 'Failed to upload file (filesystem operation failed).';
                     error_log('[PHP REST API] handle_upload_file: Upload failed (Non-WP_Error). Filesystem result: ' . print_r($result, true));
                 }
-                return new WP_REST_Response(['success' => false, 'message' => $message], 500); // Return specific or generic message
+                return new WP_REST_Response(['success' => false, 'message' => $message], 500);
             }
         } catch (Exception $e) {
-            error_log('[PHP REST API] handle_upload_file: Exception caught: ' . $e->getMessage()); // Log exception
+            error_log('[PHP REST API] handle_upload_file: Exception caught: ' . $e->getMessage());
             return new WP_REST_Response(['success' => false, 'message' => 'Server error during upload: ' . $e->getMessage()], 500);
         }
     }

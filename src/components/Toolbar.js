@@ -20,13 +20,18 @@ import { useFileManager } from '../context/FileManagerContext';
  * @param {Function} props.onDelete Function to open delete confirmation modal
  * @return {JSX.Element} The rendered component
  */
-const Toolbar = ({ onCreateFolder, onUpload, onDelete }) => {
+const Toolbar = () => {
   // Get state and methods from context
   const {
     selectedItems,
     navigateToParent,
     loadItems,
     currentPath,
+    openCreateFolderModal,
+    openUploadModal,
+    openNewFileModal,
+    handleDeleteSelectedItems,
+    loading,
   } = useFileManager();
 
   /**
@@ -42,6 +47,8 @@ const Toolbar = ({ onCreateFolder, onUpload, onDelete }) => {
   const handleParentDirectory = () => {
     navigateToParent();
   };
+
+  const hasSelection = selectedItems.length > 0;
 
   return (
     <div className="rz-file-manager__toolbar">
@@ -69,7 +76,17 @@ const Toolbar = ({ onCreateFolder, onUpload, onDelete }) => {
       <div className="rz-file-manager__toolbar-right">
         <Button
           variant="primary"
-          onClick={onCreateFolder}
+          onClick={openNewFileModal}
+          icon="plus"
+          disabled={loading}
+          className="rz-file-manager__toolbar-button"
+        >
+          {__('New File', 'rz-file-manager')}
+        </Button>
+        
+        <Button
+          variant="primary"
+          onClick={openCreateFolderModal}
           icon="plus"
           className="rz-file-manager__toolbar-button"
         >
@@ -78,17 +95,17 @@ const Toolbar = ({ onCreateFolder, onUpload, onDelete }) => {
         
         <Button
           variant="primary"
-          onClick={onUpload}
+          onClick={openUploadModal}
           icon="upload"
           className="rz-file-manager__toolbar-button"
         >
           {__('Upload', 'rz-file-manager')}
         </Button>
         
-        {selectedItems.length > 0 && (
+        {hasSelection && (
           <Button
             variant="secondary"
-            onClick={onDelete}
+            onClick={handleDeleteSelectedItems}
             icon="trash"
             isDestructive
             className="rz-file-manager__toolbar-button"

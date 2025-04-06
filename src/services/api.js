@@ -286,3 +286,37 @@ export const getDownloadUrlLegacy = (path) => {
   const downloadUrlBase = window.rzFileManagerData?.restUrl || '/wp-json' + API_BASE_PATH;
   return `${downloadUrlBase}/download?path=${encodeURIComponent(path)}&_wpnonce=${window.rzFileManagerData?.restNonce}`; // Use restNonce
 };
+
+/**
+ * Creates a new empty file.
+ * 
+ * @param {string} path The directory path where the file should be created.
+ * @param {string} filename The name of the file to create (including extension).
+ * @returns {Promise<object>} Promise resolving to the API response.
+ */
+export const createFile = async (path, filename) => {
+  // Corrected URL construction: Use restUrl directly and append endpoint name without leading slash
+  const url = `${window.rzFileManagerData?.restUrl}create-file`; 
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-WP-Nonce': window.rzFileManagerData?.restNonce,
+    },
+    body: JSON.stringify({ path, filename }), // Send path and filename
+  });
+
+  if (!response.ok) {
+    // Try to parse error message from response, otherwise use status text
+    let errorMessage = `HTTP error! status: ${response.status} ${response.statusText}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || errorMessage; // Use message from body if available
+    } catch (e) {
+      // Ignore if response body is not JSON
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response.json(); // Return the success response body
+};

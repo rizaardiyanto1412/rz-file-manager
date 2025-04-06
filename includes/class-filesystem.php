@@ -77,7 +77,7 @@ class RZ_File_Manager_Filesystem {
      * @param string $path Path to validate.
      * @return string|WP_Error Normalized path or false if invalid.
      */
-    private function validate_path($path) {
+    public function validate_path($path) {
         // Normalize path separators
         $path = str_replace('\\', '/', $path);
         $path = str_replace('\\', '/', $path);
@@ -627,5 +627,28 @@ class RZ_File_Manager_Filesystem {
         unlink($zip_path);
 
         exit;
+    }
+
+    /**
+     * Get the root path used by the filesystem.
+     *
+     * @return string The root path.
+     */
+    public function get_root_path() {
+        return $this->root_path;
+    }
+
+    /**
+     * Checks if a path is a directory using the WordPress filesystem.
+     *
+     * @param string $path Path to check.
+     * @return bool True if it is a directory, false otherwise.
+     */
+    public function is_dir($path) {
+        if (!$this->filesystem) {
+            // Handle case where filesystem failed to initialize
+            return false; 
+        }
+        return $this->filesystem->is_dir($path);
     }
 }

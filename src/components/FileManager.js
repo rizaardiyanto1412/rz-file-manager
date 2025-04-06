@@ -16,6 +16,7 @@ import CreateFolderModal from './Modals/CreateFolderModal';
 import RenameModal from './Modals/RenameModal';
 import DeleteConfirmationModal from './Modals/DeleteConfirmationModal';
 import UploadModal from './Modals/UploadModal';
+import NewFileModal from './Modals/NewFileModal';
 import FileEditorModal from './FileEditorModal';
 import ContextMenu from './ContextMenu';
 
@@ -125,6 +126,9 @@ const FileManager = () => {
 
       {/* File Editor Modal */}
       <FileEditorModal />
+
+      {/* New File Modal */}
+      <NewFileModal />
     </div>
   );
 };

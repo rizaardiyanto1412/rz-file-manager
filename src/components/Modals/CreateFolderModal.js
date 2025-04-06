@@ -83,6 +83,7 @@ const CreateFolderModal = ({ isOpen, onClose }) => {
           <TextControl
             label={__('Folder Name', 'rz-file-manager')}
             value={folderName}
+            __nextHasNoMarginBottom={true}
             onChange={handleFolderNameChange}
             placeholder={__('Enter folder name', 'rz-file-manager')}
             autoFocus

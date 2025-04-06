@@ -6,7 +6,7 @@ import { createContext, useState, useContext, useEffect, useCallback, useMemo } 
 /**
  * Internal dependencies
  */
-import { fetchFiles, createFolder, uploadFile, deleteItem, renameItem, copyItem, moveItem, getFileContent, saveFileContent } from '../services/api';
+import { fetchFiles, createFolder, uploadFile, deleteItem, renameItem, copyItem, moveItem, getFileContent, saveFileContent, createFile } from '../services/api';
 
 // Create context
 const FileManagerContext = createContext();
@@ -79,12 +79,17 @@ export const FileManagerProvider = ({ children }) => {
   // State for Upload Error
   const [uploadError, setUploadError] = useState(null);
 
+  // State for New File Modal
+  const [newFileModalState, setNewFileModalState] = useState({ isOpen: false });
+
   /**
    * Load files and folders for the current path
    */
   const loadItems = async () => {
     setLoading(true);
     setError(null);
+    setSelectedItems([]);
+    hideContextMenu(); 
     
     try {
       const response = await fetchFiles(currentPath);
@@ -100,6 +105,22 @@ export const FileManagerProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  // Initial load
+  useEffect(() => {
+    loadItems();
+  }, [currentPath]); // Reload when path changes
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   /**
    * Sort items based on key and direction
@@ -140,18 +161,43 @@ export const FileManagerProvider = ({ children }) => {
   const handleCreateFolder = async (name) => {
     setLoading(true);
     setError(null);
-    
+    closeCreateFolderModal(); // Close modal immediately
+
     try {
       const response = await createFolder(currentPath, name);
       if (response.success) {
         setSuccessMessage(response.message || 'Folder created successfully');
-        // Reload items to show the new folder
-        await loadItems();
+        await loadItems(); // Reload items to show the new folder
       } else {
         setError(response.message || 'Failed to create folder');
       }
     } catch (err) {
       setError('Error creating folder: ' + (err.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Create a new empty file
+   * 
+   * @param {string} filename The full filename (including extension)
+   */
+  const handleCreateFile = async (filename) => {
+    setLoading(true);
+    setError(null);
+    closeNewFileModal(); // Close modal immediately
+
+    try {
+      const response = await createFile(currentPath, filename);
+      if (response.success) {
+        setSuccessMessage(response.message || 'File created successfully');
+        await loadItems(); // Reload items to show the new file
+      } else {
+        setError(response.message || 'Failed to create file');
+      }
+    } catch (err) {
+      setError('Error creating file: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -494,104 +540,25 @@ export const FileManagerProvider = ({ children }) => {
   }, []);
 
   /**
+   * Open the new file modal.
+   */
+  const openNewFileModal = useCallback(() => {
+    setNewFileModalState({ isOpen: true });
+  }, []);
+
+  /**
+   * Close the new file modal.
+   */
+  const closeNewFileModal = useCallback(() => {
+    setNewFileModalState({ isOpen: false });
+  }, []);
+
+  /**
    * Load items when current path changes
    */
   useEffect(() => {
     loadItems();
   }, [currentPath, sortKey, sortDirection]);
-
-  // Clear success message after 3 seconds
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
-
-  /**
-   * Set the sort key and direction
-   * @param {string} newKey The key to sort by ('name', 'size', 'modified')
-   */
-  const setSort = (newKey) => {
-    const newDirection = (sortKey === newKey && sortDirection === 'asc') ? 'desc' : 'asc';
-    setSortKey(newKey);
-    setSortDirection(newDirection);
-    // Re-sort existing items immediately
-    setItems(prevItems => sortItems(prevItems, newKey, newDirection));
-  };
-
-  /**
-   * Open the file editor modal and load content.
-   * 
-   * @param {Object} file The file item to edit.
-   */
-  const openFileEditor = async (file) => {
-    if (file.type !== 'file') return; // Only open for files
-
-    // Reset state and show loading indicator
-    setEditorState({
-      isOpen: true,
-      file: file,
-      content: '',
-      isLoading: true,
-      error: null,
-    });
-
-    try {
-      const response = await getFileContent(file.path);
-      if (response.success) {
-        setEditorState(prev => ({ ...prev, content: response.content, isLoading: false }));
-      } else {
-        throw new Error(response.message || 'Failed to load file content.');
-      }
-    } catch (err) {
-      setEditorState(prev => ({ ...prev, isLoading: false, error: err.message }));
-      // Optionally, close the editor or show error within it
-    }
-  };
-
-  /**
-   * Close the file editor modal.
-   */
-  const closeFileEditor = () => {
-    setEditorState({ isOpen: false, file: null, content: '', isLoading: false, error: null });
-  };
-
-  /**
-   * Save the content in the file editor.
-   */
-  const saveEditedFile = async () => {
-    if (!editorState.file) return;
-
-    setEditorState(prev => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      const response = await saveFileContent(editorState.file.path, editorState.content);
-      if (response.success) {
-        closeFileEditor();
-        setSuccessMessage(response.message || 'File saved successfully!');
-        // Optionally reload items if needed, though content change doesn't affect listing directly
-        // loadItems(); 
-      } else {
-        throw new Error(response.message || 'Failed to save file content.');
-      }
-    } catch (err) {
-      setEditorState(prev => ({ ...prev, isLoading: false, error: err.message }));
-      // Keep editor open to show error
-    }
-  };
-
-  /**
-   * Update editor content state as user types.
-   *
-   * @param {string} newContent The new content from the editor.
-   */
-  const handleEditorContentChange = (newContent) => {
-    setEditorState(prev => ({ ...prev, content: newContent }));
-  };
 
   // Memoized context value
   const value = useMemo(() => ({
@@ -606,6 +573,7 @@ export const FileManagerProvider = ({ children }) => {
     // Core actions
     loadItems, // Maybe useful for manual refresh?
     handleCreateFolder,
+    handleCreateFile,
     handleUploadFiles,
     handleDeleteSelectedItems, // Keep the handler for toolbar delete
     handleDeleteItem, // Provide the handler for single item delete
@@ -621,17 +589,69 @@ export const FileManagerProvider = ({ children }) => {
     // Sorting
     sortKey,
     sortDirection,
-    setSort,
+    setSort: (newKey) => {
+      const newDirection = (sortKey === newKey && sortDirection === 'asc') ? 'desc' : 'asc';
+      setSortKey(newKey);
+      setSortDirection(newDirection);
+      // Re-sort existing items immediately
+      setItems(prevItems => sortItems(prevItems, newKey, newDirection));
+    },
     // Context Menu
     contextMenu,
     showContextMenu,
     hideContextMenu,
     // File Editor
     editorState,
-    openFileEditor,
-    closeFileEditor,
-    saveEditedFile,
-    handleEditorContentChange,
+    openFileEditor: async (file) => {
+      if (file.type !== 'file') return; // Only open for files
+
+      // Reset state and show loading indicator
+      setEditorState({
+        isOpen: true,
+        file: file,
+        content: '',
+        isLoading: true,
+        error: null,
+      });
+
+      try {
+        const response = await getFileContent(file.path);
+        if (response.success) {
+          setEditorState(prev => ({ ...prev, content: response.content, isLoading: false }));
+        } else {
+          throw new Error(response.message || 'Failed to load file content.');
+        }
+      } catch (err) {
+        setEditorState(prev => ({ ...prev, isLoading: false, error: err.message }));
+        // Optionally, close the editor or show error within it
+      }
+    },
+    closeFileEditor: () => {
+      setEditorState({ isOpen: false, file: null, content: '', isLoading: false, error: null });
+    },
+    saveEditedFile: async () => {
+      if (!editorState.file) return;
+
+      setEditorState(prev => ({ ...prev, isLoading: true, error: null }));
+
+      try {
+        const response = await saveFileContent(editorState.file.path, editorState.content);
+        if (response.success) {
+          closeFileEditor();
+          setSuccessMessage(response.message || 'File saved successfully!');
+          // Optionally reload items if needed, though content change doesn't affect listing directly
+          // loadItems(); 
+        } else {
+          throw new Error(response.message || 'Failed to save file content.');
+        }
+      } catch (err) {
+        setEditorState(prev => ({ ...prev, isLoading: false, error: err.message }));
+        // Keep editor open to show error
+      }
+    },
+    handleEditorContentChange: (newContent) => {
+      setEditorState(prev => ({ ...prev, content: newContent }));
+    },
     // Modals State & Controls
     renameModalState,
     openRenameModal,
@@ -645,6 +665,9 @@ export const FileManagerProvider = ({ children }) => {
     uploadModalState,
     openUploadModal,
     closeUploadModal,
+    newFileModalState, // **NEW** Add new file modal state
+    openNewFileModal, // **NEW** Add new file modal controls
+    closeNewFileModal,
   }), [
     currentPath,
     items,
@@ -661,6 +684,7 @@ export const FileManagerProvider = ({ children }) => {
     createFolderModalState,
     deleteModalState, // Add dependency
     uploadModalState,
+    newFileModalState, // **NEW** Add dependency
   ]);
 
   return (
