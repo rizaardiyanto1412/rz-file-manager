@@ -35,14 +35,15 @@ const FileItem = ({ item, onRename }) => {
    * @param {number} bytes File size in bytes
    * @return {string} Formatted file size
    */
-  const formatFileSize = (bytes) => {
+  const formatFileSize = (bytes, decimals = 2) => {
     if (bytes === 0) return '0 Bytes';
     
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   };
 
   /**
@@ -63,6 +64,17 @@ const FileItem = ({ item, onRename }) => {
    */
   const handleItemClick = (event) => {
     // If it's a directory, navigate to it
+    if (item.type === 'directory') {
+      navigateTo(item.path);
+    }
+  };
+
+  /**
+   * Handle double click
+   * 
+   * @param {Event} event Double click event
+   */
+  const handleDoubleClick = () => {
     if (item.type === 'directory') {
       navigateTo(item.path);
     }
@@ -106,7 +118,7 @@ const FileItem = ({ item, onRename }) => {
    */
   const getItemIcon = () => {
     if (item.type === 'directory') {
-      return 'folder';
+      return 'portfolio';
     }
     
     // Determine icon based on file extension
@@ -152,6 +164,7 @@ const FileItem = ({ item, onRename }) => {
     <tr 
       className={`rz-file-manager__file-item ${isItemSelected(item) ? 'is-selected' : ''}`}
       onClick={handleItemClick}
+      onDoubleClick={handleDoubleClick}
     >
       <td className="rz-file-manager__table-checkbox">
         <input 
@@ -162,7 +175,7 @@ const FileItem = ({ item, onRename }) => {
         />
       </td>
       <td className="rz-file-manager__table-name">
-        <span className="rz-file-manager__file-icon dashicons dashicons-{getItemIcon()}"></span>
+        <span className={`dashicons dashicons-${getItemIcon()}`} style={{ marginRight: '8px', verticalAlign: 'middle' }}></span>
         {item.name}
       </td>
       <td className="rz-file-manager__table-size">
