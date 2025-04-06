@@ -236,7 +236,27 @@
   background-color: #f0f0f0;
 }
 
-/* Editor Modal Styling */
+/*-----------------------------------------------------------------------------
+ * Editor Modal Styles
+ *----------------------------------------------------------------------------*/
+
+/* Ensure the content area within the modal stretches AND SETS WIDTH */
+.rz-file-manager-editor-modal .components-modal__content {
+  flex-grow: 1; /* Allow content area to grow */
+  display: flex !important; /* Ensure flex display - keep this */
+  flex-direction: column !important; /* Ensure column direction */
+  height: 75vh !important; /* Explicitly set a viewport height, force */
+  width: 90vw !important; /* Apply width directly to content based on successful user testing */
+  max-width: 1400px !important;
+}
+
+/* Make the Monaco Editor container fill the space */
+.rz-file-manager-editor-modal .components-modal__content > div:has(> .monaco-editor) {
+  flex-grow: 1; /* Allow the editor container to grow */
+  height: 100%; /* Make the container take full height of the content area */
+  overflow: hidden; /* Prevent potential double scrollbars */
+}
+
 .rz-file-manager__editor-modal .components-modal__content {
   /* Allow content to take more space */
   width: 70vw; /* Adjust as needed */
