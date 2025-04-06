@@ -6,7 +6,7 @@ import { createContext, useState, useContext, useEffect, useCallback } from '@wo
 /**
  * Internal dependencies
  */
-import { fetchFiles, createFolder, uploadFile, deleteItem, renameItem, copyItem, moveItem } from '../services/api';
+import { fetchFiles, createFolder, uploadFile, deleteItem, renameItem, copyItem, moveItem, getFileContent, saveFileContent } from '../services/api';
 
 // Create context
 const FileManagerContext = createContext();
@@ -50,6 +50,15 @@ export const FileManagerProvider = ({ children }) => {
     x: 0, 
     y: 0, 
     item: null 
+  });
+
+  // State for File Editor Modal
+  const [editorState, setEditorState] = useState({
+    isOpen: false,
+    file: null,
+    content: '',
+    isLoading: false,
+    error: null,
   });
 
   /**
@@ -331,6 +340,78 @@ export const FileManagerProvider = ({ children }) => {
     setItems(prevItems => sortItems(prevItems, newKey, newDirection));
   };
 
+  /**
+   * Open the file editor modal and load content.
+   * 
+   * @param {Object} file The file item to edit.
+   */
+  const openFileEditor = async (file) => {
+    if (file.type !== 'file') return; // Only open for files
+
+    // Reset state and show loading indicator
+    setEditorState({
+      isOpen: true,
+      file: file,
+      content: '',
+      isLoading: true,
+      error: null,
+    });
+
+    try {
+      const response = await getFileContent(file.path);
+      if (response.success) {
+        setEditorState(prev => ({ ...prev, content: response.content, isLoading: false }));
+      } else {
+        throw new Error(response.message || 'Failed to load file content.');
+      }
+    } catch (err) {
+      console.error("Error loading file content:", err);
+      setEditorState(prev => ({ ...prev, isLoading: false, error: err.message }));
+      // Optionally, close the editor or show error within it
+    }
+  };
+
+  /**
+   * Close the file editor modal.
+   */
+  const closeFileEditor = () => {
+    setEditorState({ isOpen: false, file: null, content: '', isLoading: false, error: null });
+  };
+
+  /**
+   * Save the content in the file editor.
+   */
+  const saveEditedFile = async () => {
+    if (!editorState.file) return;
+
+    setEditorState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const response = await saveFileContent(editorState.file.path, editorState.content);
+      if (response.success) {
+        closeFileEditor();
+        setSuccessMessage(response.message || 'File saved successfully!');
+        // Optionally reload items if needed, though content change doesn't affect listing directly
+        // loadItems(); 
+      } else {
+        throw new Error(response.message || 'Failed to save file content.');
+      }
+    } catch (err) {
+      console.error("Error saving file content:", err);
+      setEditorState(prev => ({ ...prev, isLoading: false, error: err.message }));
+      // Keep editor open to show error
+    }
+  };
+
+  /**
+   * Update editor content state as user types.
+   *
+   * @param {string} newContent The new content from the editor.
+   */
+  const handleEditorContentChange = (newContent) => {
+    setEditorState(prev => ({ ...prev, content: newContent }));
+  };
+
   // Context value
   const value = {
     currentPath,
@@ -356,6 +437,11 @@ export const FileManagerProvider = ({ children }) => {
     contextMenu,
     showContextMenu,
     hideContextMenu,
+    editorState,
+    openFileEditor,
+    closeFileEditor,
+    saveEditedFile,
+    handleEditorContentChange,
   };
 
   return (

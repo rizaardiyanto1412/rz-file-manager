@@ -29,6 +29,7 @@ const FileItem = ({ item, onRename }) => {
     isItemSelected,
     showContextMenu,
     handleDeleteItems,
+    openFileEditor, // Import openFileEditor from context
   } = useFileManager();
 
   /**
@@ -52,6 +53,8 @@ const FileItem = ({ item, onRename }) => {
   const handleDoubleClick = () => {
     if (item.type === 'directory') {
       navigateTo(item.path);
+    } else if (item.type === 'file') { // Call openFileEditor for files
+      openFileEditor(item);
     }
   };
 

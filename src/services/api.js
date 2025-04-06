@@ -186,17 +186,19 @@ export const moveItem = async (source, destination) => {
 };
 
 /**
- * Get file content
+ * Fetch file content.
  * 
- * @param {string} path File path
- * @return {Promise<Object>} API response
+ * @param {string} pathParam Path to the file.
+ * @return {Promise<Object>} API response.
  */
-export const getFileContent = async (path) => {
+export const getFileContent = async (pathParam) => {
+  // Manually construct the URL with the query parameter
+  const urlWithPath = `${API_BASE_PATH}/get-content?path=${encodeURIComponent(pathParam)}`;
+
   try {
     const response = await apiFetch({
-      path: `${API_BASE_PATH}/get-content`,
+      path: urlWithPath,
       method: 'GET',
-      data: { path },
     });
     return response;
   } catch (error) {
@@ -206,11 +208,11 @@ export const getFileContent = async (path) => {
 };
 
 /**
- * Save file content
+ * Save file content.
  * 
- * @param {string} path File path
- * @param {string} content File content
- * @return {Promise<Object>} API response
+ * @param {string} path Path to the file.
+ * @param {string} content File content.
+ * @return {Promise<Object>} API response.
  */
 export const saveFileContent = async (path, content) => {
   try {

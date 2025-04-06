@@ -241,6 +241,59 @@ class RZ_File_Manager_REST_API {
                 ),
             )
         );
+
+        // Route for getting file content -- REMOVED DUPLICATE
+        /*
+        register_rest_route(
+            $this->namespace,
+            '/get-content',
+            array(
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => array($this, 'get_content'), // Different callback
+                'permission_callback' => array($this, 'can_manage_files'), // Different permission callback
+                'args'                => array(
+                    'path' => array(
+                        'required'          => true,
+                        'validate_callback' => function($param) {
+                            return is_string($param) && !empty($param);
+                        },
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'description'       => __('Path to the file.', 'rz-file-manager'),
+                    ),
+                ),
+            )
+        );
+        */
+
+        // Route for saving file content -- REMOVED DUPLICATE
+        /*
+        register_rest_route(
+            $this->namespace,
+            '/save-content',
+            array(
+                'methods'             => WP_REST_Server::CREATABLE,
+                'callback'            => array($this, 'save_content'), // Different callback
+                'permission_callback' => array($this, 'can_manage_files'), // Different permission callback
+                'args'                => array(
+                    'path' => array(
+                        'required'          => true,
+                        'validate_callback' => function($param) {
+                            return is_string($param) && !empty($param);
+                        },
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'description'       => __('Path to the file.', 'rz-file-manager'),
+                    ),
+                    'content' => array(
+                        'required'          => true,
+                        'validate_callback' => function($param) {
+                            return is_string($param);
+                        },
+                        'description'       => __('The file content to save.', 'rz-file-manager'),
+                    ),
+                ),
+            )
+        );
+        */
     }
 
     /**
@@ -607,5 +660,80 @@ class RZ_File_Manager_REST_API {
         // Read file and output it
         readfile($absolute_path);
         exit;
+    }
+
+    /**
+     * Get file content.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
+     */
+    public function get_content(WP_REST_Request $request) {
+        $path = $request->get_param('path');
+
+        $content = $this->filesystem->get_file_content($path);
+
+        if (false === $content) {
+            return new WP_Error('cant_read_file', __('Could not read file content.', 'rz-file-manager'), array('status' => 500));
+        }
+        
+        // Consider adding checks for allowed file types here
+        if (!$this->is_editable_file($path)) {
+             return new WP_Error('file_not_editable', __('This file type cannot be edited.', 'rz-file-manager'), array('status' => 403));
+        }
+
+        return new WP_REST_Response(array('success' => true, 'content' => $content), 200);
+    }
+
+    /**
+     * Save file content.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
+     */
+    public function save_content(WP_REST_Request $request) {
+        $path    = $request->get_param('path');
+        $content = $request->get_param('content');
+
+        // Basic security: Ensure the user has the necessary capability (already done by permission_callback, but good practice).
+        if (!current_user_can('manage_options')) { // Or a more specific capability
+            return new WP_Error('rest_forbidden', esc_html__('Sorry, you are not allowed to do that.'), array('status' => is_user_logged_in() ? 403 : 401));
+        }
+        
+         // Consider adding checks for allowed file types here
+        if (!$this->is_editable_file($path)) {
+             return new WP_Error('file_not_editable', __('This file type cannot be edited.', 'rz-file-manager'), array('status' => 403));
+        }
+
+        $result = $this->filesystem->save_file_content($path, $content);
+
+        if (!$result) {
+            return new WP_Error('cant_save_file', __('Could not save file content.', 'rz-file-manager'), array('status' => 500));
+        }
+
+        return new WP_REST_Response(array('success' => true, 'message' => __('File saved successfully.', 'rz-file-manager')), 200);
+    }
+
+    /**
+     * Check if a file is editable based on its extension.
+     *
+     * @param string $path Path to the file.
+     * @return bool True if editable, false otherwise.
+     */
+    private function is_editable_file($path) {
+        $editable_extensions = array('txt', 'css', 'js', 'php', 'html', 'htm', 'json', 'xml', 'md', 'log', 'sql'); // Add more as needed
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        return in_array($extension, $editable_extensions, true);
+    }
+
+    /**
+     * Check if the user has permission to manage files.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     * @return bool True if user has permission, false otherwise.
+     */
+    public function can_manage_files($request) {
+        // Check if user can manage options
+        return current_user_can('manage_options');
     }
 }

@@ -236,6 +236,40 @@
   background-color: #f0f0f0;
 }
 
+/* Editor Modal Styling */
+.rz-file-manager__editor-modal .components-modal__content {
+  /* Allow content to take more space */
+  width: 70vw; /* Adjust as needed */
+  max-width: 900px; /* Optional max width */
+}
+
+.rz-file-manager__editor-modal .components-modal__header {
+  /* Ensure header doesn't truncate long file names */
+  word-break: break-all;
+}
+
+.rz-file-manager__editor-textarea textarea {
+  /* Basic styling for the editor */
+  width: 100%;
+  min-height: 50vh; /* Ensure a decent height */
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rz-file-manager__modal-actions {
+  /* Align modal buttons to the right */
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px; /* Space between buttons */
+  margin-top: 15px;
+}
+
+/* Loading spinner styling */
+.rz-file-manager__loading {
+  /* Add styles for loading spinner if needed */
+}
+
 /* Responsive */
 @media screen and (max-width: 782px) {
   .rz-file-manager__toolbar {
@@ -252,3 +286,5 @@
     width: auto;
   }
 }
+
+/* RTL Support */
