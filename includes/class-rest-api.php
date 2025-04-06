@@ -35,15 +35,12 @@ class RZ_File_Manager_REST_API {
      * Constructor.
      */
     public function __construct() {
-        error_log('[RZ_FM REST_API->__construct] BEGIN');
         // Determine root path (Mirroring logic from RZ_File_Manager_Assets::get_root_path for consistency)
         // WARNING: Using ABSPATH can be risky. Better to use options.
         $root_path = ABSPATH;
 
-        error_log('[RZ_FM REST_API->__construct] Attempting to instantiate Filesystem with path: ' . $root_path);
         // Initialize filesystem with the determined root path
         $this->filesystem = new RZ_File_Manager_Filesystem($root_path);
-        error_log('[RZ_FM REST_API->__construct] Filesystem instantiated.');
         
         // Register REST API routes
         add_action('rest_api_init', array($this, 'register_routes'));
@@ -52,7 +49,6 @@ class RZ_File_Manager_REST_API {
         add_action('wp_ajax_rz_fm_download_item', array($this, 'handle_download_item'));
         add_action('wp_ajax_rz_fm_download_zip', array($this, 'handle_download_zip'));
 
-        error_log('[RZ_FM REST_API->__construct] END');
     }
 
     /**
@@ -760,46 +756,35 @@ class RZ_File_Manager_REST_API {
      * Handle AJAX request to download a single file.
      */
     public function handle_download_item() {
-        error_log('[RZ_FM REST_API->handle_download_item] BEGIN');
         // Verify nonce
         check_ajax_referer('rz_fm_nonce', '_wpnonce');
-        // wp_die('DEBUG: Checkpoint 1 - Nonce Check'); // Uncomment to test
 
         // Check user capabilities (e.g., can they manage files?)
         if (!current_user_can('upload_files')) {
             wp_die(__('You do not have permission to download files.', 'rz-file-manager'), 403);
         }
-        // wp_die('DEBUG: Checkpoint 2 - Capability Check'); // Uncomment to test
 
         $path = isset($_REQUEST['path']) ? wp_unslash($_REQUEST['path']) : '';
-        error_log('[RZ_FM REST_API->handle_download_item] Received path parameter: ' . $path);
 
         if (empty($path)) {
-            error_log('[RZ_FM REST_API->handle_download_item] ERROR - Invalid file path (empty).');
             wp_die(__('Invalid file path.', 'rz-file-manager'), 400);
         }
-        // wp_die('DEBUG: Checkpoint 3 - Path Check'); // Uncomment to test
 
         // Call the filesystem method (to be created)
         $result = $this->filesystem->download_file($path);
-        // wp_die('DEBUG: Checkpoint 4 - Before Download Call'); // Uncomment to test
 
         // If the filesystem method returned an error (WP_Error), handle it
         if (is_wp_error($result)) {
-            error_log('[RZ_FM REST_API->handle_download_item] ERROR - Filesystem returned error: ' . $result->get_error_message() . ' (Code: ' . $result->get_error_code() . ')');
             wp_die($result->get_error_message(), $result->get_error_code() ?: 400);
         }
-        // wp_die('DEBUG: Checkpoint 5 - After Download Call (Should NOT be reached on success)'); // Uncomment to test
 
         // On success, download_file() handles the exit, so no code should run here.
-        error_log('[RZ_FM REST_API->handle_download_item] END (Should only see this if download_file did not exit)');
     }
 
     /**
      * Handle AJAX request to download a directory as a zip file.
      */
     public function handle_download_zip() {
-        error_log('[RZ_FM REST_API->handle_download_zip] BEGIN');
         // Verify nonce
         check_ajax_referer('rz_fm_nonce', '_wpnonce');
 
@@ -809,10 +794,8 @@ class RZ_File_Manager_REST_API {
         }
 
         $path = isset($_REQUEST['path']) ? wp_unslash($_REQUEST['path']) : '';
-        error_log('[RZ_FM REST_API->handle_download_zip] Received path parameter: ' . $path);
 
         if (empty($path)) {
-            error_log('[RZ_FM REST_API->handle_download_zip] ERROR - Invalid file path (empty).');
             wp_die(__('Invalid directory path.', 'rz-file-manager'), 400);
         }
 
@@ -821,11 +804,9 @@ class RZ_File_Manager_REST_API {
 
         // If the filesystem method returned an error (WP_Error), handle it
         if (is_wp_error($result)) {
-            error_log('[RZ_FM REST_API->handle_download_zip] ERROR - Filesystem returned error: ' . $result->get_error_message() . ' (Code: ' . $result->get_error_code() . ')');
             wp_die($result->get_error_message(), $result->get_error_code() ?: 400);
         }
 
         // On success, download_directory_as_zip() handles the exit, so no code should run here.
-        error_log('[RZ_FM REST_API->handle_download_zip] END (Should only see this if download_directory_as_zip did not exit)');
     }
 }

@@ -30,7 +30,6 @@ class RZ_File_Manager {
     public function __construct() {
         // This constructor is intentionally left empty.
         // Initialization happens in the init() method.
-        error_log('[RZ_FM RZ_File_Manager->__construct] Initializing main class.');
     }
 
     /**
@@ -52,7 +51,6 @@ class RZ_File_Manager {
      * @return void
      */
     private function load_dependencies() {
-        error_log('[RZ_FM RZ_File_Manager->load_dependencies] Loading dependencies.');
         // Load admin class
         require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-admin.php';
         
@@ -72,7 +70,6 @@ class RZ_File_Manager {
      * @return void
      */
     private function register_hooks() {
-        error_log('[RZ_FM RZ_File_Manager->register_hooks] Registering hooks.');
         // Initialize admin
         $admin = new RZ_File_Manager_Admin();
         
