@@ -75,7 +75,7 @@ const FileEditorModal = () => {
       title={file ? `${__('Edit File', 'rz-file-manager')}: ${file.name}` : __('Edit File', 'rz-file-manager')}
       onRequestClose={closeFileEditor}
       className="rz-file-manager-editor-modal" // Add a class for specific styling
-      shouldCloseOnClickOutside={false} // Prevent closing on outside click
+      shouldCloseOnClickOutside={true} // Allow closing on outside click
       isDismissible={!isLoading} // Prevent dismissing while loading/saving
     >
       {isLoading && !content && (
