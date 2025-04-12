@@ -41,7 +41,7 @@ abstract class RZ_File_Manager_REST_API_Base {
 
         // Initialize filesystem with the determined root path
         $this->filesystem = new RZ_File_Manager_Filesystem($root_path);
-        
+
         // Register REST API routes
         add_action('rest_api_init', array($this, 'register_routes'));
     }
@@ -71,6 +71,12 @@ abstract class RZ_File_Manager_REST_API_Base {
      * @return bool True if editable, false otherwise.
      */
     protected function is_editable_file($path) {
+        // Special case for .htaccess files (which don't have an extension)
+        $filename = basename($path);
+        if ($filename === '.htaccess') {
+            return true;
+        }
+
         $editable_extensions = array('txt', 'css', 'js', 'php', 'html', 'htm', 'json', 'xml', 'md', 'log', 'sql'); // Add more as needed
         $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
         return in_array($extension, $editable_extensions, true);
