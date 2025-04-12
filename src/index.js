@@ -7,7 +7,7 @@ import { render } from '@wordpress/element';
  * Internal dependencies
  */
 import App from './App';
-import { FileManagerProvider } from './context/FileManagerContext';
+import { FileManagerProvider } from './context/fileManager';
 import './styles/main.css';
 
 /**

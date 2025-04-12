@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useContext } from 'react';
 import { createPortal } from 'react-dom';
-import { useFileManager } from '../context/FileManagerContext';
+import { useFileManager } from '../context/fileManager';
 import { __ } from '@wordpress/i18n';
 import { getDownloadUrl, getZipDownloadUrl } from '../services/api'; // Import download URL functions
 
@@ -11,22 +11,22 @@ const getItemsForAction = (selectedItems, rightClickedItem) => {
 };
 
 const ContextMenu = () => {
-  const { 
-    contextMenu, 
-    hideContextMenu, 
-    openFileEditor, 
-    openRenameModal, 
+  const {
+    contextMenu,
+    hideContextMenu,
+    openFileEditor,
+    openRenameModal,
     openDeleteModal,
     handleRenameItem,
-    handleCreateFolder, 
+    handleCreateFolder,
     handleCreateFile,
     selectedItems, // Get selected items array
-    handleCopyItems, 
-    handleMoveItems, 
-    handleDownloadItem, 
-    handleDownloadZip, 
-    handleZipItem,    
-    handleUnzipItem,  
+    handleCopyItems,
+    handleMoveItems,
+    handleDownloadItem,
+    handleDownloadZip,
+    handleZipItem,
+    handleUnzipItem,
     clipboardState, // Clipboard handlers from context
     handleCutItems,
     handlePasteItems,
@@ -192,7 +192,7 @@ const ContextMenu = () => {
           <>
             <li>
               <button onClick={handleUnzip}>
-                <span className="dashicons dashicons-unlock" style={{ marginRight: '5px' }}></span> 
+                <span className="dashicons dashicons-unlock" style={{ marginRight: '5px' }}></span>
                 {`Extract to folder "${contextMenu.item.name.replace(/\.zip$/i, '')}"`}
               </button>
             </li>
@@ -223,7 +223,7 @@ const ContextMenu = () => {
           </>
         )}
         {/* Paste is always available but might be disabled */}
-        <li> 
+        <li>
           <button onClick={handlePaste} disabled={!clipboardState.action}>
             <span className="dashicons dashicons-editor-paste-text" style={{ marginRight: '5px' }}></span> {__('Paste', 'rz-file-manager')}
           </button>

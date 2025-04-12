@@ -7,24 +7,24 @@ import React from 'react';
 /**
  * Internal dependencies
  */
-import { useFileManager } from '../context/FileManagerContext';
+import { useFileManager } from '../context/fileManager';
 import FileItem from './FileItem';
 
 /**
  * FileList component
- * 
+ *
  * This component displays the list of files and folders in the current directory.
- * 
+ *
  * @param {Object} props Component props
  * @param {Function} props.onRename Function to open rename modal
  * @return {JSX.Element} The rendered component
  */
 const FileList = ({ onRename }) => {
   // Get state and methods from context
-  const { 
-    items, 
-    sortKey, 
-    sortDirection, 
+  const {
+    items,
+    sortKey,
+    sortDirection,
     setSort,
     toggleSelectAll,      // <-- Get function from context
     areAllItemsSelected,  // <-- Get state from context
@@ -50,8 +50,8 @@ const FileList = ({ onRename }) => {
       return null; // No indicator if not the active sort column
     }
     // Use Dashicons for up/down arrows
-    const iconClass = sortDirection === 'asc' 
-      ? 'dashicons dashicons-arrow-up-alt2' 
+    const iconClass = sortDirection === 'asc'
+      ? 'dashicons dashicons-arrow-up-alt2'
       : 'dashicons dashicons-arrow-down-alt2';
     return <span className={iconClass} style={{ marginLeft: '5px' }}></span>;
   };
@@ -60,7 +60,7 @@ const FileList = ({ onRename }) => {
     <div className="rz-file-manager__file-list">
       <table className="rz-file-manager__table">
         <thead className="rz-file-manager__table-head">
-          <tr onClick={(e) => e.stopPropagation()}> {/* Prevent triggering row clicks */} 
+          <tr onClick={(e) => e.stopPropagation()}> {/* Prevent triggering row clicks */}
             <th className="rz-file-manager__table-checkbox">
               {/* Add Select All Checkbox */}
               <input
@@ -87,10 +87,10 @@ const FileList = ({ onRename }) => {
         </thead>
         <tbody>
           {items.map((item) => (
-            <FileItem 
-              key={item.path} 
-              item={item} 
-              onRename={onRename} 
+            <FileItem
+              key={item.path}
+              item={item}
+              onRename={onRename}
             />
           ))}
         </tbody>

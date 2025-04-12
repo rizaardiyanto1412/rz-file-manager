@@ -6,14 +6,14 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { useFileManager } from '../context/FileManagerContext';
+import { useFileManager } from '../context/fileManager';
 
 /**
  * Breadcrumbs component
- * 
+ *
  * This component displays the current path as clickable breadcrumbs
  * to allow easy navigation between directories.
- * 
+ *
  * @return {JSX.Element} The rendered component
  */
 const Breadcrumbs = () => {
@@ -22,22 +22,22 @@ const Breadcrumbs = () => {
 
   /**
    * Generate breadcrumb items from the current path
-   * 
+   *
    * @return {Array} Array of breadcrumb items
    */
   const getBreadcrumbs = () => {
     // Start with root
     const breadcrumbs = [{ name: __('Root', 'rz-file-manager'), path: '' }];
-    
+
     // If we're at root, just return the root breadcrumb
     if (!currentPath) {
       return breadcrumbs;
     }
-    
+
     // Split the path and build breadcrumbs
     const parts = currentPath.split('/');
     let currentBreadcrumbPath = '';
-    
+
     for (let i = 0; i < parts.length; i++) {
       if (parts[i]) {
         currentBreadcrumbPath += (currentBreadcrumbPath ? '/' : '') + parts[i];
@@ -47,13 +47,13 @@ const Breadcrumbs = () => {
         });
       }
     }
-    
+
     return breadcrumbs;
   };
 
   /**
    * Handle breadcrumb click
-   * 
+   *
    * @param {string} path Path to navigate to
    * @param {Event} event Click event
    */

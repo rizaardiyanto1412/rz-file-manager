@@ -8,7 +8,7 @@ import { Spinner } from '@wordpress/components';
 /**
  * Internal dependencies
  */
-import { useFileManager } from '../context/FileManagerContext';
+import { useFileManager } from '../context/fileManager';
 import Toolbar from './Toolbar';
 import Breadcrumbs from './Breadcrumbs';
 import FileList from './FileList';
@@ -22,9 +22,9 @@ import ContextMenu from './ContextMenu';
 
 /**
  * FileManager component
- * 
+ *
  * This component serves as the main container for the file manager interface.
- * 
+ *
  * @return {JSX.Element} The rendered component
  */
 const FileManager = () => {
@@ -64,7 +64,7 @@ const FileManager = () => {
           <button onClick={clearMessages}>×</button>
         </div>
       )}
-      
+
       {successMessage && (
         <div className="rz-file-manager__success">
           <p>{successMessage}</p>
@@ -73,7 +73,7 @@ const FileManager = () => {
       )}
 
       {/* Toolbar */}
-      <Toolbar 
+      <Toolbar
         onCreateFolder={openCreateFolderModal}
         onDelete={openDeleteModal}
         onUpload={openUploadModal}

@@ -4,7 +4,7 @@
 import { __ } from '@wordpress/i18n';
 import { Modal, Button, TextControl } from '@wordpress/components';
 import { useState, useEffect } from '@wordpress/element';
-import { useFileManager } from '../../context/FileManagerContext';
+import { useFileManager } from '../../context/fileManager';
 
 /**
  * New File Modal Component

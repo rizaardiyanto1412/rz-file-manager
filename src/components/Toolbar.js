@@ -7,13 +7,13 @@ import { Button } from '@wordpress/components';
 /**
  * Internal dependencies
  */
-import { useFileManager } from '../context/FileManagerContext';
+import { useFileManager } from '../context/fileManager';
 
 /**
  * Toolbar component
- * 
+ *
  * This component renders the toolbar with action buttons for the file manager.
- * 
+ *
  * @param {Object} props Component props
  * @param {Function} props.onCreateFolder Function to open create folder modal
  * @param {Function} props.onUpload Function to open upload modal
@@ -60,7 +60,7 @@ const Toolbar = () => {
         >
           {__('Parent Directory', 'rz-file-manager')}
         </Button>
-        
+
         <Button
           variant="secondary"
           onClick={handleRefresh}
@@ -70,7 +70,7 @@ const Toolbar = () => {
           {__('Refresh', 'rz-file-manager')}
         </Button>
       </div>
-      
+
       <div className="rz-file-manager__toolbar-right">
         <Button
           variant="primary"
@@ -81,7 +81,7 @@ const Toolbar = () => {
         >
           {__('New File', 'rz-file-manager')}
         </Button>
-        
+
         <Button
           variant="primary"
           onClick={openCreateFolderModal}
@@ -90,7 +90,7 @@ const Toolbar = () => {
         >
           {__('New Folder', 'rz-file-manager')}
         </Button>
-        
+
         <Button
           variant="primary"
           onClick={openUploadModal}

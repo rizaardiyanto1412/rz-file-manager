@@ -13,7 +13,7 @@ import Editor from '@monaco-editor/react'; // <-- Import Monaco Editor
 /**
  * Internal dependencies
  */
-import { useFileManager } from '../context/FileManagerContext';
+import { useFileManager } from '../context/fileManager';
 
 /**
  * Determines the Monaco language identifier from a filename.
@@ -113,16 +113,16 @@ const FileEditorModal = () => {
       )}
 
       <div className="rz-file-manager-editor-modal__actions" style={{ marginTop: '1em', display: 'flex', justifyContent: 'flex-end' }}>
-        <Button 
-          isSecondary 
+        <Button
+          isSecondary
           onClick={closeFileEditor}
           disabled={isLoading}
           style={{ marginRight: '8px' }}
         >
           {__('Cancel', 'rz-file-manager')}
         </Button>
-        <Button 
-          isPrimary 
+        <Button
+          isPrimary
           onClick={saveEditedFile}
           isBusy={isLoading} // Show spinner on button when saving
           disabled={isLoading || !!error} // Disable if loading or there was a load error

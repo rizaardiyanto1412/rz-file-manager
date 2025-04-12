@@ -7,15 +7,15 @@ import { Button } from '@wordpress/components';
 /**
  * Internal dependencies
  */
-import { useFileManager } from '../context/FileManagerContext';
+import { useFileManager } from '../context/fileManager';
 import { getDownloadUrl } from '../services/api';
 import { formatFileSize, formatDate } from '../utils/formatters';
 
 /**
  * FileItem component
- * 
+ *
  * This component displays a single file or folder in the file list.
- * 
+ *
  * @param {Object} props Component props
  * @param {Object} props.item File or folder item
  * @param {Function} props.onRename Function to open rename modal
@@ -23,9 +23,9 @@ import { formatFileSize, formatDate } from '../utils/formatters';
  */
 const FileItem = ({ item, onRename }) => {
   // Get state and methods from context
-  const { 
-    navigateTo, 
-    toggleSelectItem, 
+  const {
+    navigateTo,
+    toggleSelectItem,
     isItemSelected,
     showContextMenu,
     handleDeleteItems,
@@ -34,20 +34,20 @@ const FileItem = ({ item, onRename }) => {
 
   /**
    * Handle item click
-   * 
+   *
    * @param {Event} event Click event
    */
   const handleItemClick = (event) => {
     // NOTE: We REMOVED toggleSelectItem from the row click.
     // Selection is now handled ONLY by the checkbox onChange.
-    // We might want to add other single-click actions here later, 
+    // We might want to add other single-click actions here later,
     // like previewing a file, but for now, single-clicking the row does nothing
     // other than prepare for a double-click or context menu.
   };
 
   /**
    * Handle double click
-   * 
+   *
    * @param {Event} event Double click event
    */
   const handleDoubleClick = () => {
@@ -60,7 +60,7 @@ const FileItem = ({ item, onRename }) => {
 
   /**
    * Handle right click (context menu)
-   * 
+   *
    * @param {Event} event Context menu event
    */
   const handleContextMenu = (event) => {
@@ -70,7 +70,7 @@ const FileItem = ({ item, onRename }) => {
 
   /**
    * Handle rename button click
-   * 
+   *
    * @param {Event} event Click event
    */
   const handleRenameClick = (event) => {
@@ -80,7 +80,7 @@ const FileItem = ({ item, onRename }) => {
 
   /**
    * Handle delete button click
-   * 
+   *
    * @param {Event} event Click event
    */
   const handleDeleteClick = (event) => {
@@ -91,7 +91,7 @@ const FileItem = ({ item, onRename }) => {
 
   /**
    * Get icon based on item type and extension
-   * 
+   *
    * @return {string} Dashicon name
    */
   const getItemIcon = () => {

@@ -7,7 +7,7 @@ import { Modal, Button } from '@wordpress/components';
 /**
  * Internal dependencies
  */
-import { useFileManager } from '../../context/FileManagerContext';
+import { useFileManager } from '../../context/fileManager';
 
 /**
  * Delete Confirmation Modal Component
