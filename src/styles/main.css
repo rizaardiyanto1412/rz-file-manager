@@ -112,9 +112,31 @@
   border: 1px dashed #ddd;
   border-radius: 4px;
   display: flex;
+  flex-direction: column;
   height: 150px;
   justify-content: center;
   text-align: center;
+  padding: 20px;
+}
+
+.rz-file-manager__empty p {
+  margin: 10px 0;
+  color: #666;
+  font-size: 16px;
+}
+
+.rz-file-manager__empty-hint {
+  font-size: 14px !important;
+  color: #999 !important;
+  font-style: italic;
+}
+
+.rz-file-manager__empty .dashicons {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: #ccc;
+  margin-bottom: 10px;
 }
 
 /* File list */
@@ -135,9 +157,14 @@
 }
 
 .rz-file-manager__table th {
-  background-color: #f9f9f9;
+  background-color: #f0f0f1;
   font-weight: 600;
   cursor: pointer;
+  border-bottom: 1px solid #c3c4c7;
+  padding: 12px 10px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .rz-file-manager__table th[onClick] {
@@ -165,15 +192,21 @@
 /* File item */
 .rz-file-manager__file-item {
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+}
+
+/* Add alternating row colors */
+.rz-file-manager__file-item:nth-child(even) {
+  background-color: #f9f9f9;
 }
 
 .rz-file-manager__file-item:hover {
-  background-color: #f0f0f0;
+  background-color: #f0f7ff;
 }
 
 .rz-file-manager__file-item.is-selected {
-  background-color: #e0e0e0;
+  background-color: #e6f2ff;
+  box-shadow: inset 0 0 0 1px #2271b1;
 }
 
 .rz-file-manager__file-icon {
@@ -456,11 +489,12 @@
 }
 
 .rz-folder-tree-item__header:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: #f0f7ff;
 }
 
 .rz-folder-tree-item__header.is-active {
-  background-color: #f0f0f1;
+  background-color: #e6f2ff;
+  font-weight: 500;
 }
 
 .rz-folder-tree-item__toggle {

@@ -95,7 +95,7 @@ const FolderTreeItem = ({ folder, onFolderClick, currentPath, level = 0 }) => {
           className="rz-folder-tree-item__name"
           onClick={handleClick}
         >
-          <span className="dashicons dashicons-category"></span>
+          <span className="dashicons dashicons-portfolio" style={{ color: '#f0ad4e' }}></span>
           <span className="rz-folder-tree-item__label">{folder.name}</span>
         </div>
       </div>

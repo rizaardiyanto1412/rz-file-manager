@@ -35,7 +35,9 @@ const FileList = ({ onRename }) => {
   if (items.length === 0) {
     return (
       <div className="rz-file-manager__empty">
+        <span className="dashicons dashicons-portfolio"></span>
         <p>{__('This folder is empty.', 'rz-file-manager')}</p>
+        <p className="rz-file-manager__empty-hint">{__('Upload files or create a new folder to get started.', 'rz-file-manager')}</p>
       </div>
     );
   }

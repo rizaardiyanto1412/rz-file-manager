@@ -150,7 +150,14 @@ const FileItem = ({ item, onRename }) => {
         />
       </td>
       <td className="rz-file-manager__table-name">
-        <span className={`dashicons dashicons-${getItemIcon()}`} style={{ marginRight: '8px', verticalAlign: 'middle' }}></span>
+        <span
+          className={`dashicons dashicons-${getItemIcon()}`}
+          style={{
+            marginRight: '8px',
+            verticalAlign: 'middle',
+            color: item.type === 'directory' ? '#f0ad4e' : '#5bc0de'
+          }}
+        ></span>
         {item.name}
       </td>
       <td className="rz-file-manager__table-size">
