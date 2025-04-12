@@ -23,6 +23,9 @@ class RZ_File_Manager_Admin {
     public function __construct() {
         // Register admin menu
         add_action('admin_menu', array($this, 'register_admin_menu'));
+
+        // Add custom SVG icon to allowed mime types
+        add_filter('upload_mimes', array($this, 'add_svg_mime_type'));
     }
 
     /**
@@ -33,11 +36,11 @@ class RZ_File_Manager_Admin {
     public function register_admin_menu() {
         add_menu_page(
             __('RZ File Manager', 'rz-file-manager'),
-            __('File Manager', 'rz-file-manager'),
+            __('RZ File Manager', 'rz-file-manager'),
             'manage_options',
             'rz-file-manager',
             array($this, 'render_admin_page'),
-            'dashicons-media-default',
+            $this->get_svg_icon(), // Using custom SVG icon with color
             30
         );
     }
