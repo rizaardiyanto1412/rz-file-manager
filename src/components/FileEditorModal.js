@@ -93,13 +93,20 @@ const FileEditorModal = () => {
       {/* Only render editor if not initial loading and no error preventing load */}
       {(!isLoading || content) && !error && (
         <Editor
-          height="60vh" // Set a height for the editor
+          height="50vh" // Set a height for the editor
           language={language} // Set language based on file extension
           value={content} // Pass the file content
           theme="vs-light" // Use a light theme suitable for WP admin
           options={{
             lineNumbers: 'on', // Turn on line numbers
-            minimap: { enabled: false }, // Disable minimap for simplicity
+            minimap: {
+              enabled: true, // Enable minimap
+              side: 'right', // Position minimap on the right side
+              size: 'proportional', // Can be 'proportional' or 'fill'
+              showSlider: 'mouseover', // Show slider on mouseover
+              renderCharacters: false, // Set to false for better performance, true for character rendering
+              maxColumn: 120 // Maximum number of columns to render
+            },
             wordWrap: 'on', // Enable word wrapping
             scrollBeyondLastLine: false, // Don't scroll beyond the last line
             readOnly: isLoading, // Make readonly while saving
