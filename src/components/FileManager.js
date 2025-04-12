@@ -2,8 +2,8 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { useContext, useEffect } from '@wordpress/element';
-import { Spinner } from '@wordpress/components';
+import { useContext, useEffect, useState } from '@wordpress/element';
+import { Spinner, Button } from '@wordpress/components';
 
 /**
  * Internal dependencies
@@ -12,6 +12,8 @@ import { useFileManager } from '../context/fileManager';
 import Toolbar from './Toolbar';
 import Breadcrumbs from './Breadcrumbs';
 import FileList from './FileList';
+import FolderTree from './FolderTree';
+import TestFolderTree from './TestFolderTree';
 import CreateFolderModal from './Modals/CreateFolderModal';
 import RenameModal from './Modals/RenameModal';
 import DeleteConfirmationModal from './Modals/DeleteConfirmationModal';
@@ -50,9 +52,17 @@ const FileManager = () => {
     closeUploadModal,
   } = useFileManager();
 
+  // State to control showing the test component
+  const [showTest, setShowTest] = useState(false);
+
   // Click handler to close context menu
   const handleWrapperClick = () => {
     hideContextMenu();
+  };
+
+  // Toggle test component
+  const toggleTest = () => {
+    setShowTest(prev => !prev);
   };
 
   return (
@@ -79,17 +89,38 @@ const FileManager = () => {
         onUpload={openUploadModal}
       />
 
-      {/* Breadcrumbs */}
-      <Breadcrumbs />
+      {/* Debug Button */}
+      <div className="rz-file-manager__debug">
+        <Button isSecondary onClick={toggleTest}>
+          {showTest ? 'Hide Debug' : 'Show Debug'}
+        </Button>
+      </div>
 
-      {/* File List */}
-      {loading ? (
-        <div className="rz-file-manager__loading">
-          <Spinner />
+      {/* Test Component */}
+      {showTest && <TestFolderTree />}
+
+      {/* Main Content Area with Folder Tree and File List */}
+      <div className="rz-file-manager__content">
+        {/* Folder Tree */}
+        <div className="rz-file-manager__sidebar">
+          <FolderTree />
         </div>
-      ) : (
-        <FileList />
-      )}
+
+        {/* Main Content */}
+        <div className="rz-file-manager__main">
+          {/* Breadcrumbs */}
+          <Breadcrumbs />
+
+          {/* File List */}
+          {loading ? (
+            <div className="rz-file-manager__loading">
+              <Spinner />
+            </div>
+          ) : (
+            <FileList />
+          )}
+        </div>
+      </div>
 
       {/* Modals - Use context state and functions */}
       {createFolderModalState.isOpen && (
