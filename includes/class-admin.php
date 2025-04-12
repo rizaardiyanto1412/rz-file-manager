@@ -40,7 +40,7 @@ class RZ_File_Manager_Admin {
             'manage_options',
             'rz-file-manager',
             array($this, 'render_admin_page'),
-            $this->get_svg_icon(), // Using custom SVG icon with color
+            'dashicons-portfolio', // Using portfolio icon for folder
             30
         );
     }
