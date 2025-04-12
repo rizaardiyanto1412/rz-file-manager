@@ -53,13 +53,13 @@ class RZ_File_Manager {
     private function load_dependencies() {
         // Load admin class
         require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-admin.php';
-        
+
         // Load filesystem class (Needs to be before REST API)
         require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-filesystem.php';
-        
-        // Load REST API class (Depends on Filesystem)
-        require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-rest-api.php';
-        
+
+        // Load REST API loader class (Depends on Filesystem)
+        require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/rest-api/class-rest-api-loader.php';
+
         // Load assets class
         require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-assets.php';
     }
@@ -72,10 +72,10 @@ class RZ_File_Manager {
     private function register_hooks() {
         // Initialize admin
         $admin = new RZ_File_Manager_Admin();
-        
-        // Initialize REST API
-        $rest_api = new RZ_File_Manager_REST_API();
-        
+
+        // Initialize REST API loader
+        $rest_api_loader = new RZ_File_Manager_REST_API_Loader();
+
         // Initialize assets
         $assets = new RZ_File_Manager_Assets();
     }
@@ -90,11 +90,11 @@ class RZ_File_Manager {
         if (!file_exists(RZ_FILE_MANAGER_PLUGIN_DIR . 'assets/js')) {
             wp_mkdir_p(RZ_FILE_MANAGER_PLUGIN_DIR . 'assets/js');
         }
-        
+
         if (!file_exists(RZ_FILE_MANAGER_PLUGIN_DIR . 'assets/css')) {
             wp_mkdir_p(RZ_FILE_MANAGER_PLUGIN_DIR . 'assets/css');
         }
-        
+
         // Add default plugin options
         $default_options = array(
             'root_path' => wp_upload_dir()['basedir'],
@@ -102,9 +102,9 @@ class RZ_File_Manager {
             'max_upload_size' => wp_max_upload_size(),
             'allowed_file_types' => 'jpg,jpeg,png,gif,pdf,doc,docx,ppt,pptx,xls,xlsx,zip,txt,md',
         );
-        
+
         add_option('rz_file_manager_options', $default_options);
-        
+
         // Flush rewrite rules
         flush_rewrite_rules();
     }
