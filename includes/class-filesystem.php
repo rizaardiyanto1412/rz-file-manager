@@ -71,7 +71,7 @@ class RZ_File_Manager_Filesystem {
 
     /**
      * Constructor.
-     * 
+     *
      * @param string|null $root_path The root path to use. If null, reads from options or defaults to uploads.
      */
     public function __construct($root_path = null) {
@@ -81,7 +81,7 @@ class RZ_File_Manager_Filesystem {
         $this->item_operations = new RZ_File_Manager_Filesystem_Item_Operations($root_path);
         $this->bulk_operations = new RZ_File_Manager_Filesystem_Bulk_Operations($root_path);
         $this->archive_operations = new RZ_File_Manager_Filesystem_Archive_Operations($root_path);
-        
+
         // Store root path for reference
         $this->root_path = $this->directory_operations->get_root_path();
     }
@@ -286,5 +286,28 @@ class RZ_File_Manager_Filesystem {
      */
     public function delete_bulk($paths) {
         return $this->bulk_operations->delete_bulk($paths);
+    }
+
+    /**
+     * Check if a file or directory exists.
+     *
+     * @param string $path Path to check.
+     * @return bool True if the file or directory exists, false otherwise.
+     */
+    public function exists($path) {
+        // Delegate to the WordPress filesystem
+        return $this->file_operations->get_filesystem()->exists($path);
+    }
+
+    /**
+     * Write contents to a file.
+     *
+     * @param string $file     The file to write to.
+     * @param string $contents The contents to write to the file.
+     * @return bool True on success, false on failure.
+     */
+    public function put_contents($file, $contents) {
+        // Delegate to the WordPress filesystem
+        return $this->file_operations->get_filesystem()->put_contents($file, $contents);
     }
 }

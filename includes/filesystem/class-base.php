@@ -40,7 +40,7 @@ class RZ_File_Manager_Filesystem_Base {
 
     /**
      * Constructor.
-     * 
+     *
      * @param string|null $root_path The root path to use. If null, reads from options or defaults to uploads.
      */
     public function __construct($root_path = null) {
@@ -100,19 +100,19 @@ class RZ_File_Manager_Filesystem_Base {
         // Normalize path separators
         $path = str_replace('\\', '/', $path);
         $path = str_replace('\\', '/', $path);
-        
+
         // Remove any '../' to prevent directory traversal
         $path = preg_replace('/\.\.\//', '', $path);
-        
+
         // Get absolute path
         $absolute_path = $this->root_path . '/' . ltrim($path, '/');
         $real_path = realpath($absolute_path);
-        
+
         // Check if path is within root directory
         if ($real_path === false || strpos($real_path, realpath($this->root_path)) !== 0) {
             return new WP_Error('invalid_path', __('Invalid path or path traversal attempt detected.', 'rz-file-manager'), ['status' => 400]);
         }
-        
+
         return $absolute_path;
     }
 
@@ -123,10 +123,10 @@ class RZ_File_Manager_Filesystem_Base {
      */
     protected function get_allowed_file_types() {
         $options = get_option('rz_file_manager_options', array());
-        $allowed_types_string = isset($options['allowed_file_types']) 
-            ? $options['allowed_file_types'] 
+        $allowed_types_string = isset($options['allowed_file_types'])
+            ? $options['allowed_file_types']
             : 'jpg,jpeg,png,gif,pdf,doc,docx,ppt,pptx,xls,xlsx,zip,txt,md';
-        
+
         return array_map('trim', explode(',', $allowed_types_string));
     }
 
@@ -140,6 +140,15 @@ class RZ_File_Manager_Filesystem_Base {
     }
 
     /**
+     * Get the WordPress filesystem instance.
+     *
+     * @return WP_Filesystem_Base The WordPress filesystem instance.
+     */
+    public function get_filesystem() {
+        return $this->filesystem;
+    }
+
+    /**
      * Checks if a path is a directory using the WordPress filesystem.
      *
      * @param string $path Path to check.
@@ -148,7 +157,7 @@ class RZ_File_Manager_Filesystem_Base {
     public function is_dir($path) {
         if (!$this->filesystem) {
             // Handle case where filesystem failed to initialize
-            return false; 
+            return false;
         }
         return $this->filesystem->is_dir($path);
     }
