@@ -22,7 +22,7 @@ class RZ_File_Manager_REST_API_Transfer_Operations extends RZ_File_Manager_REST_
      */
     public function __construct() {
         parent::__construct();
-        
+
         // Register Admin AJAX actions for downloads
         add_action('wp_ajax_rz_fm_download_item', array($this, 'handle_download_item'));
         add_action('wp_ajax_rz_fm_download_zip', array($this, 'handle_download_zip'));
@@ -72,50 +72,38 @@ class RZ_File_Manager_REST_API_Transfer_Operations extends RZ_File_Manager_REST_
     /**
      * Upload a file.
      *
+     * This method handles file uploads via the REST API. Nonce verification is handled by WordPress
+     * core through the X-WP-Nonce header and the permission_callback in register_rest_route.
+     *
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_REST_Response|WP_Error Response object or WP_Error.
      */
     public function handle_upload_file($request) {
-        // Security Note: Nonce verification is typically handled by the 'permission_callback' 
-        // in register_rest_route for REST API endpoints, not checked here directly.
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $current_path = $request->get_param('current_path'); // Assuming path is validated/sanitized by filesystem methods
+        // Get and sanitize the current path from the request
+        $current_path = $request->get_param('current_path'); // Already sanitized via register_rest_route args
 
-        // Basic validation
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        if (!isset($_FILES['file'])) {
-            return new WP_REST_Response(['success' => false, 'message' => esc_html__('No file data received.', 'rz-file-manager')], 400);
+        // Get the uploaded file data
+        $file_data = $this->get_sanitized_file_data();
+
+        // Check if we have valid file data
+        if (is_wp_error($file_data)) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => $file_data->get_error_message()
+            ], 400);
         }
-
-        // Check for upload errors (ensure index exists first)
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        if (!isset($_FILES['file']['error'])){
-             return new WP_REST_Response(['success' => false, 'message' => esc_html__('Invalid file upload data.', 'rz-file-manager')], 400);
-        }
-        
-        $upload_error = (int) $_FILES['file']['error']; // Sanitize as integer
-
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        if ($upload_error !== UPLOAD_ERR_OK) {
-            return new WP_REST_Response(['success' => false, 'message' => $this->get_upload_error_message($upload_error)], 400);
-        }
-
-        // The $this->filesystem->upload_file method is responsible for securely handling 
-        // and sanitizing the contents of the $_FILES['file'] array (e.g., using wp_handle_upload).
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce handled by REST permission_callback
-        $file = $_FILES['file'];
 
         try {
-            // Assume $this->filesystem is an instance of your Filesystem class
-            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitization handled within upload_file method
-            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce handled by REST permission_callback
-            $result = $this->filesystem->upload_file($current_path, $file);
+            // Pass the sanitized file data to the filesystem method
+            $result = $this->filesystem->upload_file($current_path, $file_data);
 
             // Check if the filesystem operation returned exactly true
-            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce handled by REST permission_callback
             if ($result === true) {
                 // Filesystem class returned true, assume success, provide generic message
-                return new WP_REST_Response(['success' => true, 'message' => esc_html__('File uploaded successfully.', 'rz-file-manager')], 200);
+                return new WP_REST_Response([
+                    'success' => true,
+                    'message' => esc_html__('File uploaded successfully.', 'rz-file-manager')
+                ], 200);
             } else {
                 // Handle WP_Error specifically
                 if (is_wp_error($result)) {
@@ -127,8 +115,65 @@ class RZ_File_Manager_REST_API_Transfer_Operations extends RZ_File_Manager_REST_
                 return new WP_REST_Response(['success' => false, 'message' => esc_html($message)], 500);
             }
         } catch (Exception $e) {
-            return new WP_REST_Response(['success' => false, 'message' => 'Server error during upload: ' . esc_html($e->getMessage())], 500);
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Server error during upload: ' . esc_html($e->getMessage())
+            ], 500);
         }
+    }
+
+    /**
+     * Get and sanitize file data from the $_FILES superglobal.
+     *
+     * This method handles all the validation and sanitization of the uploaded file data.
+     *
+     * @return array|WP_Error Sanitized file data array or WP_Error on failure.
+     */
+    private function get_sanitized_file_data() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- REST API nonce verification is handled by WordPress core
+        // via the X-WP-Nonce header and the permission_callback in register_rest_route
+
+        // Basic validation
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if (!isset($_FILES['file'])) {
+            return new WP_Error('no_file', esc_html__('No file data received.', 'rz-file-manager'));
+        }
+
+        // Check for upload errors (ensure index exists first)
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if (!isset($_FILES['file']['error'])) {
+            return new WP_Error('invalid_file', esc_html__('Invalid file upload data.', 'rz-file-manager'));
+        }
+
+        // Get and sanitize the upload error code
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $upload_error = (int) $_FILES['file']['error'];
+
+        // Check for upload errors
+        if ($upload_error !== UPLOAD_ERR_OK) {
+            return new WP_Error('upload_error', $this->get_upload_error_message($upload_error));
+        }
+
+        // Additional validation
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if (!is_array($_FILES['file'])) {
+            return new WP_Error('invalid_file_data', esc_html__('Invalid file data format.', 'rz-file-manager'));
+        }
+
+        // Create a sanitized copy of the file data with proper sanitization for each field
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Each field is explicitly sanitized below
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        return array(
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing
+            'name' => isset($_FILES['file']['name']) ? sanitize_file_name($_FILES['file']['name']) : '',
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing
+            'type' => isset($_FILES['file']['type']) ? sanitize_text_field($_FILES['file']['type']) : '',
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing
+            'tmp_name' => isset($_FILES['file']['tmp_name']) ? $_FILES['file']['tmp_name'] : '',
+            'error' => $upload_error,
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing
+            'size' => isset($_FILES['file']['size']) ? (int) $_FILES['file']['size'] : 0
+        );
     }
 
     /**
@@ -167,7 +212,7 @@ class RZ_File_Manager_REST_API_Transfer_Operations extends RZ_File_Manager_REST_
     public function download_file($request) {
         // Get path parameter
         $path = $request->get_param('path');
-        
+
         // Validate path
         $absolute_path = $this->filesystem->validate_path($path);
         if (!$absolute_path) {
@@ -177,7 +222,7 @@ class RZ_File_Manager_REST_API_Transfer_Operations extends RZ_File_Manager_REST_
                 array('status' => 400)
             );
         }
-        
+
         // Check if file exists
         if (!file_exists($absolute_path) || is_dir($absolute_path)) {
             return new WP_Error(
@@ -186,12 +231,12 @@ class RZ_File_Manager_REST_API_Transfer_Operations extends RZ_File_Manager_REST_
                 array('status' => 404)
             );
         }
-        
+
         // Get file info
         $filename = basename($absolute_path);
         $filesize = filesize($absolute_path);
         $filetype = wp_check_filetype($filename);
-        
+
         // Set headers for download
         header('Content-Description: File Transfer');
         header('Content-Type: ' . $filetype['type']);
@@ -201,11 +246,11 @@ class RZ_File_Manager_REST_API_Transfer_Operations extends RZ_File_Manager_REST_
         header('Cache-Control: must-revalidate');
         header('Pragma: public');
         header('Content-Length: ' . $filesize);
-        
+
         // Clear output buffer
         ob_clean();
         flush();
-        
+
         // Read file and output it
         // Note: Using readfile for performance in downloads. Ensure $absolute_path is validated before calling this function.
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile

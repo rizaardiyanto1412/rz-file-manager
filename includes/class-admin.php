@@ -23,9 +23,6 @@ class RZ_File_Manager_Admin {
     public function __construct() {
         // Register admin menu
         add_action('admin_menu', array($this, 'register_admin_menu'));
-
-        // Add custom SVG icon to allowed mime types
-        add_filter('upload_mimes', array($this, 'add_svg_mime_type'));
     }
 
     /**
@@ -40,7 +37,7 @@ class RZ_File_Manager_Admin {
             'manage_options',
             'rz-file-manager',
             array($this, 'render_admin_page'),
-            'dashicons-open-folder', 
+            'dashicons-portfolio', // Using portfolio icon for folder
             30
         );
     }

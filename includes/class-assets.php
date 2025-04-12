@@ -23,6 +23,7 @@ class RZ_File_Manager_Assets {
     public function __construct() {
         // Register scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'register_assets'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_styles'));
     }
 
     /**
@@ -97,8 +98,24 @@ class RZ_File_Manager_Assets {
      */
     private function get_allowed_file_types() {
         $options = get_option('rz_file_manager_options', array());
-        return isset($options['allowed_file_types']) 
-            ? $options['allowed_file_types'] 
+        return isset($options['allowed_file_types'])
+            ? $options['allowed_file_types']
             : 'jpg,jpeg,png,gif,pdf,doc,docx,ppt,pptx,xls,xlsx,zip,txt,md';
+    }
+
+    /**
+     * Enqueue admin styles for the menu icon.
+     *
+     * @param string $hook Current admin page hook.
+     * @return void
+     */
+    public function enqueue_admin_styles($hook) {
+        // Load admin menu styles on all admin pages
+        wp_enqueue_style(
+            'rz-file-manager-admin-menu',
+            RZ_FILE_MANAGER_PLUGIN_URL . 'assets/css/admin-menu.css',
+            array(),
+            RZ_FILE_MANAGER_VERSION
+        );
     }
 }

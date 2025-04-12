@@ -1,0 +1,705 @@
+# Copyright (C) 2025 Riza
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: RZ File Manager 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/rz-file-manager\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-04-12T17:36:05+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.11.0\n"
+"X-Domain: rz-file-manager\n"
+
+#. Plugin Name of the plugin
+#: rz-file-manager.php
+#: includes/class-admin.php:35
+#: includes/class-admin.php:36
+msgid "RZ File Manager"
+msgstr ""
+
+#. Plugin URI of the plugin
+#. Author URI of the plugin
+#: rz-file-manager.php
+msgid "https://rizamaulana.com"
+msgstr ""
+
+#. Description of the plugin
+#: rz-file-manager.php
+msgid "A modern file manager for WordPress with a React-based interface."
+msgstr ""
+
+#. Author of the plugin
+#: rz-file-manager.php
+msgid "Riza"
+msgstr ""
+
+#: includes/class-admin.php:53
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""
+
+#: includes/class-archive.php:55
+#: includes/class-archive.php:121
+msgid "PHP ZipArchive extension is required but not enabled on the server."
+msgstr ""
+
+#: includes/class-archive.php:59
+#: includes/filesystem/class-item-operations.php:118
+#: includes/filesystem/class-item-operations.php:165
+msgid "Source file or directory not found."
+msgstr ""
+
+#: includes/class-archive.php:66
+msgid "Could not open zip file for writing."
+msgstr ""
+
+#: includes/class-archive.php:74
+#: includes/class-archive.php:96
+msgid "Could not add file to zip archive."
+msgstr ""
+
+#: includes/class-archive.php:91
+msgid "Could not add directory to zip archive."
+msgstr ""
+
+#: includes/class-archive.php:102
+msgid "Source is neither a file nor a directory."
+msgstr ""
+
+#: includes/class-archive.php:106
+msgid "Could not close the zip archive."
+msgstr ""
+
+#: includes/class-archive.php:125
+msgid "Zip archive not found or is not a file."
+msgstr ""
+
+#: includes/class-archive.php:131
+msgid "Could not create destination directory for extraction."
+msgstr ""
+
+#: includes/class-archive.php:134
+msgid "Destination directory is not writable or is not a directory."
+msgstr ""
+
+#: includes/class-archive.php:141
+msgid "Could not open zip archive for reading."
+msgstr ""
+
+#: includes/class-archive.php:147
+msgid "Could not extract zip archive."
+msgstr ""
+
+#: includes/class-archive.php:152
+msgid "Could not close the zip archive after extraction."
+msgstr ""
+
+#: includes/class-plugin-links.php:39
+msgid "File Manager"
+msgstr ""
+
+#: includes/filesystem/class-archive-operations.php:45
+msgid "Invalid or non-existent source path specified for zipping."
+msgstr ""
+
+#: includes/filesystem/class-archive-operations.php:49
+#: includes/filesystem/class-archive-operations.php:91
+msgid "Archive handler failed to initialize."
+msgstr ""
+
+#: includes/filesystem/class-archive-operations.php:60
+msgid "Cannot zip an item into itself."
+msgstr ""
+
+#: includes/filesystem/class-archive-operations.php:82
+msgid "Invalid or non-existent zip file specified for extraction."
+msgstr ""
+
+#: includes/filesystem/class-archive-operations.php:87
+msgid "The specified file is not a zip archive."
+msgstr ""
+
+#: includes/filesystem/class-archive-operations.php:108
+msgid "Cannot extract an archive into itself."
+msgstr ""
+
+#: includes/filesystem/class-archive-operations.php:115
+msgid "A file or folder with the target extraction name already exists."
+msgstr ""
+
+#: includes/filesystem/class-base.php:113
+msgid "Invalid path or path traversal attempt detected."
+msgstr ""
+
+#: includes/filesystem/class-bulk-operations.php:31
+#: includes/filesystem/class-directory-operations.php:30
+#: includes/filesystem/class-directory-operations.php:69
+#: includes/filesystem/class-file-operations.php:31
+#: includes/filesystem/class-file-operations.php:85
+#: includes/filesystem/class-file-operations.php:113
+#: includes/filesystem/class-item-operations.php:30
+#: includes/filesystem/class-item-operations.php:65
+#: includes/rest-api/class-transfer-operations.php:221
+msgid "Invalid path specified."
+msgstr ""
+
+#: includes/filesystem/class-bulk-operations.php:39
+#: includes/filesystem/class-item-operations.php:35
+#: includes/filesystem/class-item-operations.php:70
+msgid "File or directory not found."
+msgstr ""
+
+#: includes/filesystem/class-bulk-operations.php:46
+#: includes/filesystem/class-item-operations.php:42
+msgid "Failed to delete directory."
+msgstr ""
+
+#: includes/filesystem/class-bulk-operations.php:51
+#: includes/filesystem/class-item-operations.php:47
+msgid "Failed to delete file."
+msgstr ""
+
+#: includes/filesystem/class-directory-operations.php:35
+msgid "Directory not found."
+msgstr ""
+
+#: includes/filesystem/class-directory-operations.php:75
+msgid "Invalid directory name."
+msgstr ""
+
+#: includes/filesystem/class-directory-operations.php:83
+msgid "Directory already exists."
+msgstr ""
+
+#: includes/filesystem/class-directory-operations.php:88
+msgid "Failed to create directory."
+msgstr ""
+
+#: includes/filesystem/class-directory-operations.php:149
+msgid "Path is not a directory."
+msgstr ""
+
+#: includes/filesystem/class-directory-operations.php:158
+msgid "Could not create zip file."
+msgstr ""
+
+#: includes/filesystem/class-directory-operations.php:195
+msgid "Could not read the created zip archive."
+msgstr ""
+
+#: includes/filesystem/class-file-operations.php:36
+msgid "No file was uploaded or upload failed."
+msgstr ""
+
+#: includes/filesystem/class-file-operations.php:42
+msgid "Invalid filename."
+msgstr ""
+
+#: includes/filesystem/class-file-operations.php:49
+msgid "File type not allowed."
+msgstr ""
+
+#: includes/filesystem/class-file-operations.php:55
+msgid "File is too large."
+msgstr ""
+
+#: includes/filesystem/class-file-operations.php:63
+#: includes/rest-api/class-file-operations.php:236
+msgid "File already exists."
+msgstr ""
+
+#: includes/filesystem/class-file-operations.php:69
+msgid "Failed to upload file."
+msgstr ""
+
+#: includes/filesystem/class-file-operations.php:90
+#: includes/filesystem/class-file-operations.php:118
+#: includes/rest-api/class-transfer-operations.php:230
+msgid "File not found."
+msgstr ""
+
+#: includes/filesystem/class-file-operations.php:96
+msgid "Failed to read file."
+msgstr ""
+
+#: includes/filesystem/class-file-operations.php:123
+msgid "Failed to save file."
+msgstr ""
+
+#: includes/filesystem/class-file-operations.php:143
+msgid "File not found or is a directory."
+msgstr ""
+
+#: includes/filesystem/class-item-operations.php:76
+msgid "Invalid name."
+msgstr ""
+
+#: includes/filesystem/class-item-operations.php:85
+msgid "A file or directory with that name already exists."
+msgstr ""
+
+#: includes/filesystem/class-item-operations.php:90
+msgid "Failed to rename."
+msgstr ""
+
+#: includes/filesystem/class-item-operations.php:107
+#: includes/filesystem/class-item-operations.php:154
+msgid "Invalid source path."
+msgstr ""
+
+#: includes/filesystem/class-item-operations.php:113
+#: includes/filesystem/class-item-operations.php:160
+msgid "Invalid destination path."
+msgstr ""
+
+#: includes/filesystem/class-item-operations.php:123
+#: includes/filesystem/class-item-operations.php:170
+msgid "Destination already exists."
+msgstr ""
+
+#: includes/filesystem/class-item-operations.php:131
+msgid "Failed to copy directory."
+msgstr ""
+
+#: includes/filesystem/class-item-operations.php:136
+msgid "Failed to copy file."
+msgstr ""
+
+#: includes/filesystem/class-item-operations.php:175
+msgid "Failed to move file or directory."
+msgstr ""
+
+#: includes/filesystem/class-item-operations.php:205
+msgid "Destination path is outside the allowed directory."
+msgstr ""
+
+#: includes/rest-api/class-archive-operations.php:90
+msgid "Item zipped successfully."
+msgstr ""
+
+#: includes/rest-api/class-archive-operations.php:122
+msgid "Archive extracted successfully."
+msgstr ""
+
+#: includes/rest-api/class-content-operations.php:109
+#: includes/rest-api/class-content-operations.php:151
+#: includes/rest-api/class-content-operations.php:174
+msgid "This file type cannot be edited."
+msgstr ""
+
+#: includes/rest-api/class-content-operations.php:128
+#: includes/rest-api/class-content-operations.php:183
+msgid "File saved successfully."
+msgstr ""
+
+#: includes/rest-api/class-content-operations.php:146
+msgid "Could not read file content."
+msgstr ""
+
+#: includes/rest-api/class-content-operations.php:169
+msgid "Sorry, you are not allowed to do that."
+msgstr ""
+
+#: includes/rest-api/class-content-operations.php:180
+msgid "Could not save file content."
+msgstr ""
+
+#: includes/rest-api/class-copy-move-operations.php:96
+#: includes/rest-api/class-copy-move-operations.php:153
+msgid "Item copied successfully."
+msgstr ""
+
+#: includes/rest-api/class-copy-move-operations.php:129
+#: includes/rest-api/class-copy-move-operations.php:187
+msgid "Item moved successfully."
+msgstr ""
+
+#: includes/rest-api/class-copy-move-operations.php:147
+#: includes/rest-api/class-copy-move-operations.php:181
+msgid "Missing source or destination path."
+msgstr ""
+
+#: includes/rest-api/class-copy-move-operations.php:156
+msgid "Failed to copy item (unknown reason)."
+msgstr ""
+
+#: includes/rest-api/class-copy-move-operations.php:190
+msgid "Failed to move item (unknown reason)."
+msgstr ""
+
+#: includes/rest-api/class-file-operations.php:183
+msgid "Folder created successfully."
+msgstr ""
+
+#: includes/rest-api/class-file-operations.php:202
+msgid "Could not determine base directory."
+msgstr ""
+
+#: includes/rest-api/class-file-operations.php:209
+msgid "Invalid or non-existent directory path specified."
+msgstr ""
+
+#: includes/rest-api/class-file-operations.php:216
+#: assets/js/main.js:1
+#: src/components/Modals/NewFileModal.js:45
+msgid "Filename cannot be empty."
+msgstr ""
+
+#: includes/rest-api/class-file-operations.php:225
+msgid "Filename contains invalid characters."
+msgstr ""
+
+#: includes/rest-api/class-file-operations.php:249
+msgid "File created successfully."
+msgstr ""
+
+#: includes/rest-api/class-file-operations.php:256
+msgid "Could not create file. Check permissions."
+msgstr ""
+
+#: includes/rest-api/class-file-operations.php:288
+msgid "Item deleted successfully."
+msgstr ""
+
+#: includes/rest-api/class-file-operations.php:321
+msgid "Item renamed successfully."
+msgstr ""
+
+#: includes/rest-api/class-transfer-operations.php:105
+msgid "File uploaded successfully."
+msgstr ""
+
+#: includes/rest-api/class-transfer-operations.php:139
+msgid "No file data received."
+msgstr ""
+
+#: includes/rest-api/class-transfer-operations.php:145
+msgid "Invalid file upload data."
+msgstr ""
+
+#: includes/rest-api/class-transfer-operations.php:160
+msgid "Invalid file data format."
+msgstr ""
+
+#: includes/rest-api/class-transfer-operations.php:270
+msgid "You do not have permission to download files."
+msgstr ""
+
+#: includes/rest-api/class-transfer-operations.php:277
+msgid "Invalid file path."
+msgstr ""
+
+#: includes/rest-api/class-transfer-operations.php:300
+msgid "You do not have permission to download folders."
+msgstr ""
+
+#: includes/rest-api/class-transfer-operations.php:307
+msgid "Invalid directory path."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Toolbar.js:61
+msgid "Parent Directory"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Toolbar.js:70
+msgid "Refresh"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Toolbar.js:82
+msgid "New File"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Toolbar.js:91
+msgid "New Folder"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/UploadModal.js:210
+#: src/components/Toolbar.js:100
+msgid "Upload"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Breadcrumbs.js:30
+#: src/components/FolderTree.js:152
+msgid "Root"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FileList.js:39
+msgid "This folder is empty."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FileList.js:40
+msgid "Upload files or create a new folder to get started."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FileList.js:70
+msgid "Select all items"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FileList.js:77
+msgid "Name"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FileList.js:81
+msgid "Size"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FileList.js:85
+msgid "Modified"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FolderTree.js:90
+msgid "Collapse folder"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FolderTree.js:90
+msgid "Expand folder"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FolderTree.js:121
+msgid "No subfolders"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FolderTree.js:176
+msgid "Folders"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/CreateFolderModal.js:72
+msgid "Create New Folder"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/CreateFolderModal.js:49
+msgid "Folder name contains invalid characters."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/CreateFolderModal.js:43
+msgid "Please enter a folder name."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/CreateFolderModal.js:79
+msgid "Create a new folder in:"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/CreateFolderModal.js:84
+msgid "Folder Name"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/CreateFolderModal.js:88
+msgid "Enter folder name"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FileEditorModal.js:129
+#: src/components/Modals/CreateFolderModal.js:104
+#: src/components/Modals/DeleteConfirmationModal.js:70
+#: src/components/Modals/NewFileModal.js:108
+#: src/components/Modals/RenameModal.js:120
+#: src/components/Modals/UploadModal.js:202
+msgid "Cancel"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/CreateFolderModal.js:111
+msgid "Create Folder"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/RenameModal.js:86
+#: src/components/Modals/RenameModal.js:127
+msgid "Rename"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/RenameModal.js:57
+msgid "Name contains invalid characters."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/RenameModal.js:51
+msgid "Please enter a name."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/RenameModal.js:94
+msgid "Rename folder:"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/RenameModal.js:95
+msgid "Rename file:"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/RenameModal.js:101
+msgid "New Name"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/RenameModal.js:104
+msgid "Enter new name"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/DeleteConfirmationModal.js:37
+msgid "Are you sure you want to delete \"%s\"?"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/DeleteConfirmationModal.js:38
+msgid "Are you sure you want to delete %d selected items?"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/DeleteConfirmationModal.js:51
+msgid "Confirm Deletion"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/DeleteConfirmationModal.js:60
+msgid "This action cannot be undone."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/DeleteConfirmationModal.js:79
+msgid "Deleting..."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/ContextMenu.js:220
+#: src/components/Modals/DeleteConfirmationModal.js:79
+msgid "Delete"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/UploadModal.js:125
+msgid "Upload Files"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/UploadModal.js:137
+msgid "Upload files to:"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/UploadModal.js:155
+msgid "Browse Files"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/UploadModal.js:161
+msgid "No files selected"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/UploadModal.js:168
+msgid "Selected Files"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/NewFileModal.js:78
+msgid "Create New File"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/NewFileModal.js:54
+msgid "Filename contains invalid characters (\\\\ / : * ? \" < > |)."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/NewFileModal.js:62
+msgid "Please include a file extension (e.g., .txt, .html)."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/NewFileModal.js:87
+msgid "Filename (including extension)"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/NewFileModal.js:90
+msgid "e.g., document.txt, image.jpg"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/NewFileModal.js:92
+msgid "Enter the name for the new file, including its extension."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/NewFileModal.js:116
+msgid "Creating..."
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/Modals/NewFileModal.js:116
+msgid "Create File"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FileEditorModal.js:75
+msgid "Edit File"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FileEditorModal.js:89
+msgid "Error"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/FileEditorModal.js:137
+msgid "Save Changes"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/ContextMenu.js:170
+msgid "Edit"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/ContextMenu.js:176
+msgid "Download"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/ContextMenu.js:187
+msgid "Compress to .zip"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/ContextMenu.js:210
+msgid "Copy"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/ContextMenu.js:215
+msgid "Cut"
+msgstr ""
+
+#: assets/js/main.js:1
+#: src/components/ContextMenu.js:228
+msgid "Paste"
+msgstr ""

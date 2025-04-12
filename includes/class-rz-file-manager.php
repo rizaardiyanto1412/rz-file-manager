@@ -62,6 +62,9 @@ class RZ_File_Manager {
 
         // Load assets class
         require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-assets.php';
+
+        // Load plugin links class
+        require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-plugin-links.php';
     }
 
     /**
@@ -78,6 +81,9 @@ class RZ_File_Manager {
 
         // Initialize assets
         $assets = new RZ_File_Manager_Assets();
+
+        // Initialize plugin links
+        $plugin_links = new RZ_File_Manager_Plugin_Links();
     }
 
     /**
