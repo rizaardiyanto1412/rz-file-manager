@@ -2,8 +2,7 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { useContext, useEffect, useState } from '@wordpress/element';
-import { Spinner, Button } from '@wordpress/components';
+import { Spinner } from '@wordpress/components';
 
 /**
  * Internal dependencies
@@ -13,7 +12,7 @@ import Toolbar from './Toolbar';
 import Breadcrumbs from './Breadcrumbs';
 import FileList from './FileList';
 import FolderTree from './FolderTree';
-import TestFolderTree from './TestFolderTree';
+
 import CreateFolderModal from './Modals/CreateFolderModal';
 import RenameModal from './Modals/RenameModal';
 import DeleteConfirmationModal from './Modals/DeleteConfirmationModal';
@@ -52,17 +51,9 @@ const FileManager = () => {
     closeUploadModal,
   } = useFileManager();
 
-  // State to control showing the test component
-  const [showTest, setShowTest] = useState(false);
-
   // Click handler to close context menu
   const handleWrapperClick = () => {
     hideContextMenu();
-  };
-
-  // Toggle test component
-  const toggleTest = () => {
-    setShowTest(prev => !prev);
   };
 
   return (
@@ -89,15 +80,7 @@ const FileManager = () => {
         onUpload={openUploadModal}
       />
 
-      {/* Debug Button */}
-      <div className="rz-file-manager__debug">
-        <Button isSecondary onClick={toggleTest}>
-          {showTest ? 'Hide Debug' : 'Show Debug'}
-        </Button>
-      </div>
 
-      {/* Test Component */}
-      {showTest && <TestFolderTree />}
 
       {/* Main Content Area with Folder Tree and File List */}
       <div className="rz-file-manager__content">
