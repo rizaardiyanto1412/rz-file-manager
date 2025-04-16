@@ -1,7 +1,6 @@
 <?php
 /**
  * Plugin Name: RZ File Manager
- * Plugin URI: https://rizamaulana.com
  * Description: A modern file manager for WordPress with a React-based interface.
  * Version: 1.0.0
  * Author: Riza
