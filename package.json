@@ -6,7 +6,7 @@
   "scripts": {
     "start": "wp-scripts start",
     "build": "wp-scripts build",
-    "package": "npm run build && rm -rf rz-file-manager build/rz-file-manager.zip && mkdir rz-file-manager && cp -R includes assets languages readme.txt rz-file-manager.php uninstall.php rz-file-manager/ && zip -r rz-file-manager.zip rz-file-manager -x \"*.DS_Store\" \"*/.DS_Store\" && mkdir -p build && mv rz-file-manager.zip build/rz-file-manager.zip && rm -rf rz-file-manager",
+    "package": "npm run build && node scripts/package-plugin.js",
     "format": "wp-scripts format",
     "lint:js": "wp-scripts lint-js",
     "lint:css": "wp-scripts lint-style"
@@ -15,7 +15,9 @@
   "license": "GPL-2.0-or-later",
   "devDependencies": {
     "@wordpress/scripts": "^26.0.0",
+    "archiver": "^7.0.1",
     "css-loader": "^7.1.2",
+    "fs-extra": "^11.3.0",
     "mini-css-extract-plugin": "^2.9.2"
   },
   "dependencies": {

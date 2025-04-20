@@ -1,0 +1,11 @@
+{
+    "name": "rizaardiyanto/rz-file-manager",
+    "description": "WordPress plugin that adds file manager and bundled phpMyAdmin database manager.",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.4",
+        "phpmyadmin/phpmyadmin": "^5.2"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
