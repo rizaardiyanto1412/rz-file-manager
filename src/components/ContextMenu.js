@@ -30,6 +30,8 @@ const ContextMenu = () => {
     clipboardState, // Clipboard handlers from context
     handleCutItems,
     handlePasteItems,
+    openNewFileModal, // <-- add this
+    openUploadModal   // <-- add this
   } = useFileManager();
   const menuRef = useRef(null);
 
@@ -67,7 +69,7 @@ const ContextMenu = () => {
       >
         <ul>
           <li>
-            <button onClick={() => { handleCreateFile(); hideContextMenu(); }}>
+            <button onClick={() => { openNewFileModal(); hideContextMenu(); }}>
               <span className="dashicons dashicons-media-default" style={{ marginRight: '5px' }}></span> {__('New File', 'rz-file-manager')}
             </button>
           </li>
