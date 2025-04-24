@@ -65,6 +65,9 @@ class RZ_File_Manager {
 
         // Load plugin links class
         require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-plugin-links.php';
+
+        // Load settings class
+        require_once RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/class-settings.php';
     }
 
     /**
@@ -75,6 +78,9 @@ class RZ_File_Manager {
     private function register_hooks() {
         // Initialize admin
         $admin = new RZ_File_Manager_Admin();
+
+        // Initialize settings
+        $settings = new RZ_File_DB_Manager_Settings();
 
         // Initialize REST API loader
         $rest_api_loader = new RZ_File_Manager_REST_API_Loader();
