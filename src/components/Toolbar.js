@@ -71,35 +71,7 @@ const Toolbar = () => {
         </Button>
       </div>
 
-      <div className="rz-file-manager__toolbar-right">
-        <Button
-          variant="primary"
-          onClick={openNewFileModal}
-          icon="plus"
-          disabled={loading}
-          className="rz-file-manager__toolbar-button"
-        >
-          {__('New File', 'rz-file-manager')}
-        </Button>
-
-        <Button
-          variant="primary"
-          onClick={openCreateFolderModal}
-          icon="plus"
-          className="rz-file-manager__toolbar-button"
-        >
-          {__('New Folder', 'rz-file-manager')}
-        </Button>
-
-        <Button
-          variant="primary"
-          onClick={openUploadModal}
-          icon="upload"
-          className="rz-file-manager__toolbar-button"
-        >
-          {__('Upload', 'rz-file-manager')}
-        </Button>
-      </div>
+      
     </div>
   );
 };
