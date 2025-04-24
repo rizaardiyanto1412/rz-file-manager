@@ -65,8 +65,10 @@ const FileItem = ({ item, onRename }) => {
    */
   const handleContextMenu = (event) => {
     event.preventDefault(); // Prevent default browser context menu
+    event.stopPropagation(); // Prevent parent handlers from firing
     showContextMenu(item, event);
   };
+
 
   /**
    * Handle rename button click

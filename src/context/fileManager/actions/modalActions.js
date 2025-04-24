@@ -23,6 +23,7 @@ export const useModalActions = (state, setState) => {
   /**
    * Context menu actions
    */
+  // Unified context menu for both file/folder and whitespace
   const showContextMenu = useCallback((item, event) => {
     updateState({
       contextMenu: {

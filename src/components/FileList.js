@@ -34,7 +34,16 @@ const FileList = ({ onRename }) => {
   // If there are no items, show a message
   if (items.length === 0) {
     return (
-      <div className="rz-file-manager__empty">
+      <div
+        className="rz-file-manager__empty"
+        onContextMenu={(e) => {
+          e.preventDefault();
+          // Show context menu for whitespace (no item)
+          if (typeof window !== 'undefined' && window?.rzShowContextMenu) {
+            window.rzShowContextMenu(null, e);
+          }
+        }}
+      >
         <span className="dashicons dashicons-portfolio"></span>
         <p>{__('This folder is empty.', 'rz-file-manager')}</p>
         <p className="rz-file-manager__empty-hint">{__('Upload files or create a new folder to get started.', 'rz-file-manager')}</p>
@@ -59,8 +68,20 @@ const FileList = ({ onRename }) => {
   };
 
   return (
-    <div className="rz-file-manager__file-list">
-      <table className="rz-file-manager__table">
+    <div
+      className="rz-file-manager__file-list"
+      style={{ minHeight: '400px', flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+      onContextMenu={(e) => {
+        // Only show context menu if not right-clicking a file/folder row
+        if (!e.target.closest('.rz-file-manager__table-row')) {
+          e.preventDefault();
+          if (typeof window !== 'undefined' && window?.rzShowContextMenu) {
+            window.rzShowContextMenu(null, e);
+          }
+        }
+      }}
+    >
+      <table className="rz-file-manager__table" style={{ flex: '0 0 auto' }}>
         <thead className="rz-file-manager__table-head">
           <tr onClick={(e) => e.stopPropagation()}> {/* Prevent triggering row clicks */}
             <th className="rz-file-manager__table-checkbox">
@@ -102,3 +123,12 @@ const FileList = ({ onRename }) => {
 };
 
 export default FileList;
+
+// CSS (add to your main CSS file if not present):
+// .rz-file-manager__file-list {
+//   min-height: 400px;
+//   flex-grow: 1;
+//   display: flex;
+//   flex-direction: column;
+// }
+

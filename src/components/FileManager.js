@@ -28,6 +28,8 @@ import ContextMenu from './ContextMenu';
  *
  * @return {JSX.Element} The rendered component
  */
+import { useEffect } from 'react';
+
 const FileManager = () => {
   // Get state and methods from context
   const {
@@ -35,6 +37,8 @@ const FileManager = () => {
     error,
     successMessage,
     clearMessages,
+    showContextMenu, // <-- Add this
+
     // Modals from context
     renameModalState,
     openRenameModal,
@@ -50,6 +54,14 @@ const FileManager = () => {
     openUploadModal,
     closeUploadModal,
   } = useFileManager();
+
+  // Attach showContextMenu to window so FileList can trigger it
+  useEffect(() => {
+    window.rzShowContextMenu = showContextMenu;
+    return () => {
+      window.rzShowContextMenu = undefined;
+    };
+  }, [showContextMenu]);
 
   // Click handler to close context menu
   const handleWrapperClick = () => {
@@ -90,7 +102,18 @@ const FileManager = () => {
         </div>
 
         {/* Main Content */}
-        <div className="rz-file-manager__main">
+        <div
+          className="rz-file-manager__main"
+          onContextMenu={(e) => {
+            // Prevent context menu if right-clicking on a file/folder row
+            if (!e.target.closest('.rz-file-manager__table-row')) {
+              e.preventDefault();
+              if (typeof window !== 'undefined' && window?.rzShowContextMenu) {
+                window.rzShowContextMenu(null, e);
+              }
+            }
+          }}
+        >
           {/* Breadcrumbs */}
           <Breadcrumbs />
 

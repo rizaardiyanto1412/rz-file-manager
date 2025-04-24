@@ -53,8 +53,38 @@ const ContextMenu = () => {
     };
   }, [contextMenu.visible, hideContextMenu]);
 
-  if (!contextMenu.visible || !contextMenu.item) {
-    return null; // Don't render if not visible or no item
+  if (!contextMenu.visible) {
+    return null; // Don't render if not visible
+  }
+
+  // If item is null, show only New File, New Folder, Upload
+  if (!contextMenu.item) {
+    return createPortal(
+      <div
+        ref={menuRef}
+        className="rz-file-manager-context-menu"
+        style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 1000 }}
+      >
+        <ul>
+          <li>
+            <button onClick={() => { handleCreateFile(); hideContextMenu(); }}>
+              <span className="dashicons dashicons-media-default" style={{ marginRight: '5px' }}></span> {__('New File', 'rz-file-manager')}
+            </button>
+          </li>
+          <li>
+            <button onClick={() => { handleCreateFolder(); hideContextMenu(); }}>
+              <span className="dashicons dashicons-portfolio" style={{ marginRight: '5px' }}></span> {__('New Folder', 'rz-file-manager')}
+            </button>
+          </li>
+          <li>
+            <button onClick={() => { openUploadModal(); hideContextMenu(); }}>
+              <span className="dashicons dashicons-upload" style={{ marginRight: '5px' }}></span> {__('Upload', 'rz-file-manager')}
+            </button>
+          </li>
+        </ul>
+      </div>,
+      document.body
+    );
   }
 
   const handleEdit = () => {
