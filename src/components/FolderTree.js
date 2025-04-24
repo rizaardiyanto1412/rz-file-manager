@@ -23,12 +23,9 @@ import { fetchFiles } from '../services/api';
  */
 import React, { memo } from 'react';
 
-const FolderTreeItem = memo(({ folder, onFolderClick, currentPath, level = 0 }) => {
-  // Set Root folder to be open by default
-  const isRootFolder = folder.path === '';
-  const [isOpen, setIsOpen] = useState(isRootFolder);
+const FolderTreeItem = memo(({ folder, onFolderClick, currentPath, level = 0, isOpen, onToggle }) => {
   const [children, setChildren] = useState([]);
-  const [isLoading, setIsLoading] = useState(isRootFolder);
+  const [isLoading, setIsLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   // Check if this folder is in the current path
@@ -59,26 +56,25 @@ const FolderTreeItem = memo(({ folder, onFolderClick, currentPath, level = 0 }) 
 
   // Load children for Root folder automatically on mount
   useEffect(() => {
-    if (isRootFolder && !loaded) {
+    if (folder.path === '' && !loaded) {
       loadChildren();
     }
-  }, [isRootFolder, loaded, loadChildren]);
+  }, [folder.path, loaded, loadChildren]);
 
-  // Memoize toggleFolder to avoid inline recreation
-  const toggleFolder = useCallback(async () => {
-    if (!isOpen && !loaded) {
-      await loadChildren();
+  // Load children when folder is opened
+  useEffect(() => {
+    if (isOpen && !loaded) {
+      loadChildren();
     }
-    setIsOpen(prev => !prev);
   }, [isOpen, loaded, loadChildren]);
 
-  // Memoize handleClick to avoid inline recreation
+  // Memoize handleClick
   const handleClick = useCallback(() => {
     onFolderClick(folder.path);
     if (!isOpen) {
-      toggleFolder();
+      onToggle(folder.path);
     }
-  }, [onFolderClick, folder.path, isOpen, toggleFolder]);
+  }, [onFolderClick, folder.path, isOpen, onToggle]);
 
   return (
     <div className="rz-folder-tree-item">
@@ -88,7 +84,7 @@ const FolderTreeItem = memo(({ folder, onFolderClick, currentPath, level = 0 }) 
       >
         <button
           className="rz-folder-tree-item__toggle"
-          onClick={toggleFolder}
+          onClick={() => onToggle(folder.path)}
           aria-label={isOpen ? __('Collapse folder', 'rz-file-manager') : __('Expand folder', 'rz-file-manager')}
         >
           <span className={`dashicons ${isOpen ? 'dashicons-arrow-down-alt2' : 'dashicons-arrow-right-alt2'}`}></span>
@@ -113,9 +109,11 @@ const FolderTreeItem = memo(({ folder, onFolderClick, currentPath, level = 0 }) 
               <FolderTreeItem
                 key={childFolder.path}
                 folder={childFolder}
-                onFolderClick={onFolderClick} // Handler is memoized
+                onFolderClick={onFolderClick}
                 currentPath={currentPath}
                 level={level + 1}
+                isOpen={!!onToggle.openFolders[childFolder.path]}
+                onToggle={onToggle}
               />
             ))
           ) : loaded ? (
@@ -140,22 +138,22 @@ const FolderTree = () => {
   const { currentPath, navigateTo } = useFileManager();
   const [rootFolders, setRootFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [openFolders, setOpenFolders] = useState({ '': true }); // Root open by default
 
-  // Load root folders on mount
+  // Restore root folder loading
   useEffect(() => {
     const loadRootFolders = async () => {
       setIsLoading(true);
       try {
+        // Fetch root folder data
         const response = await fetchFiles('');
         if (response.success && response.items) {
-          // Only use the root folder with its children
-          // This prevents duplicate folders in the tree
+          // Use the root as a single entry point
           const rootFolder = {
             name: __('Root', 'rz-file-manager'),
             path: '',
             type: 'folder'
           };
-
           setRootFolders([rootFolder]);
         }
       } catch (error) {
@@ -164,9 +162,42 @@ const FolderTree = () => {
         setIsLoading(false);
       }
     };
-
     loadRootFolders();
   }, []);
+
+  // Helper: get all parent paths for a given path
+  function getAllParentPaths(path) {
+    const paths = [];
+    let curr = path;
+    while (curr) {
+      paths.unshift(curr);
+      const idx = curr.lastIndexOf('/');
+      if (idx <= 0) break;
+      curr = curr.slice(0, idx);
+    }
+    if (!paths.includes('')) paths.unshift('');
+    return paths;
+  }
+
+  // Open all folders in the currentPath chain when navigation changes
+  useEffect(() => {
+    const paths = getAllParentPaths(currentPath);
+    setOpenFolders(prev => {
+      const updated = { ...prev };
+      paths.forEach(p => { updated[p] = true; });
+      return updated;
+    });
+  }, [currentPath]);
+
+  // Toggle open/close for a folder
+  const handleToggle = useCallback((path) => {
+    setOpenFolders(prev => ({
+      ...prev,
+      [path]: !prev[path]
+    }));
+  }, []);
+  // Attach openFolders to handleToggle so FolderTreeItem can access it for children
+  handleToggle.openFolders = openFolders;
 
   // Handle folder click
   const handleFolderClick = (path) => {
@@ -189,6 +220,8 @@ const FolderTree = () => {
               onFolderClick={handleFolderClick}
               currentPath={currentPath}
               level={0}
+              isOpen={!!openFolders[folder.path]}
+              onToggle={handleToggle}
             />
           ))}
         </div>
