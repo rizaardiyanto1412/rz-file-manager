@@ -90,6 +90,73 @@ class RZ_File_Manager {
 
         // Initialize plugin links
         $plugin_links = new RZ_File_Manager_Plugin_Links();
+
+        // Adminer rewrite rules and handling
+        add_action('init', array($this, 'add_rewrite_rules'));
+        add_filter('query_vars', array($this, 'add_query_vars'));
+        add_action('template_redirect', array($this, 'handle_adminer_request'));
+    }
+
+    /**
+     * Add rewrite rule for Adminer.
+     *
+     * @return void
+     */
+    public function add_rewrite_rules() {
+        add_rewrite_rule('^rz-adminer/?$', 'index.php?rz_adminer_load=1', 'top');
+    }
+
+    /**
+     * Add custom query variable for Adminer.
+     *
+     * @param array $vars Existing query variables.
+     * @return array Updated query variables.
+     */
+    public function add_query_vars($vars) {
+        $vars[] = 'rz_adminer_load';
+        return $vars;
+    }
+
+    /**
+     * Handle the request for the Adminer page.
+     * Loads the Adminer auto-login script if the query var is set.
+     *
+     * @return void
+     */
+    public function handle_adminer_request() {
+        if (get_query_var('rz_adminer_load')) {
+            // Security check ALWAYS needed
+            if (!current_user_can('manage_options')) {
+                wp_die(__('Unauthorized', 'rz-file-manager'));
+            }
+
+            $adminer_vendor_path = RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/vendor/adminer.php';
+            $adminer_auto_login_path = RZ_FILE_MANAGER_PLUGIN_DIR . 'includes/adminer-auto-login.php'; // Needed for the initial auto-login POST setup
+
+            if (!file_exists($adminer_vendor_path)) {
+                 wp_die('Adminer script not found at: ' . esc_html($adminer_vendor_path));
+            }
+
+            // Check if Adminer seems to be running already by detecting its typical GET parameters.
+            // Add more parameters here if needed based on Adminer's behavior.
+            $isAdminerActive = isset($_GET['server']) || isset($_GET['username']) || isset($_GET['db']) || isset($_GET['sql']) || isset($_GET['edit']) || isset($_GET['select']) || isset($_GET['history']) || isset($_GET['dump']);
+
+            if ($isAdminerActive) {
+                // Adminer is already active (likely after the initial POST/Redirect/Get).
+                // Just include the main Adminer script directly. It will handle its state.
+                include $adminer_vendor_path;
+                exit; // Stop WordPress further loading
+            } else {
+                // This appears to be the INITIAL request to /rz-adminer (no Adminer GET params).
+                // Include the auto-login script which sets $_POST and then includes vendor/adminer.php.
+                if (file_exists($adminer_auto_login_path)) {
+                     include $adminer_auto_login_path; // This script includes vendor/adminer.php and exits itself
+                     exit; // Exit again just to be safe
+                } else {
+                     wp_die('Adminer auto-login script not found at: ' . esc_html($adminer_auto_login_path));
+                }
+            }
+        }
     }
 
     /**
@@ -117,7 +184,8 @@ class RZ_File_Manager {
 
         add_option('rz_file_manager_options', $default_options);
 
-        // Flush rewrite rules
+        // Flush rewrite rules on activation.
+        self::add_rewrite_rules(); // Need to ensure our rule is added before flushing
         flush_rewrite_rules();
     }
 

@@ -109,8 +109,8 @@ class RZ_File_Manager_Admin {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'rz-file-manager'));
         }
-        // Launch Adminer via auto-login wrapper (POST form)
-        $adminer_url = esc_url( RZ_FILE_MANAGER_PLUGIN_URL . 'includes/adminer-auto-login.php' );
+        // Use the new clean URL for Adminer
+        $adminer_url = esc_url( home_url('/rz-adminer/') );
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('DB Manager', 'rz-file-manager'); ?></h1>
