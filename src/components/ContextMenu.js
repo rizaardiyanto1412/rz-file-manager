@@ -31,7 +31,8 @@ const ContextMenu = () => {
     handleCutItems,
     handlePasteItems,
     openNewFileModal, // <-- add this
-    openUploadModal   // <-- add this
+    openUploadModal,  // <-- add this
+    openCreateFolderModal // <-- add this
   } = useFileManager();
   const menuRef = useRef(null);
 
@@ -74,7 +75,7 @@ const ContextMenu = () => {
             </button>
           </li>
           <li>
-            <button onClick={() => { handleCreateFolder(); hideContextMenu(); }}>
+            <button onClick={() => { openCreateFolderModal(); hideContextMenu(); }}>
               <span className="dashicons dashicons-portfolio" style={{ marginRight: '5px' }}></span> {__('New Folder', 'rz-file-manager')}
             </button>
           </li>
