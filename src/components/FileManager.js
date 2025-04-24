@@ -2,7 +2,7 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { Spinner } from '@wordpress/components';
+import { Spinner, Snackbar, Notice } from '@wordpress/components';
 
 /**
  * Internal dependencies
@@ -71,18 +71,24 @@ const FileManager = () => {
   return (
     <div className="rz-file-manager" onClick={handleWrapperClick}>
       {/* Messages */}
+      {/* Error/Warning Message */}
       {error && (
-        <div className="rz-file-manager__error">
-          <p>{error}</p>
-          <button onClick={clearMessages}>×</button>
-        </div>
+        <Notice
+          status="error"
+          isDismissible={true}
+          onRemove={clearMessages}
+        >
+          {error}
+        </Notice>
       )}
 
+      {/* Success Message */}
       {successMessage && (
-        <div className="rz-file-manager__success">
-          <p>{successMessage}</p>
-          <button onClick={clearMessages}>×</button>
-        </div>
+        <Snackbar
+          onRemove={clearMessages}
+        >
+          {successMessage}
+        </Snackbar>
       )}
 
       {/* Toolbar */}
