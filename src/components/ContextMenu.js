@@ -84,6 +84,13 @@ const ContextMenu = () => {
               <span className="dashicons dashicons-upload" style={{ marginRight: '5px' }}></span> {__('Upload', 'rz-file-manager')}
             </button>
           </li>
+          {clipboardState && clipboardState.items && clipboardState.items.length > 0 && (
+            <li>
+              <button onClick={() => { handlePasteItems(); hideContextMenu(); }}>
+                <span className="dashicons dashicons-clipboard" style={{ marginRight: '5px' }}></span> {__('Paste', 'rz-file-manager')}
+              </button>
+            </li>
+          )}
         </ul>
       </div>,
       document.body
