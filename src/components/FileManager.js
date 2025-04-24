@@ -2,7 +2,8 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { Spinner, Snackbar, Notice } from '@wordpress/components';
+import { Spinner, Notice } from '@wordpress/components';
+import SnackbarPortal from './SnackbarPortal';
 
 /**
  * Internal dependencies
@@ -82,13 +83,9 @@ const FileManager = () => {
         </Notice>
       )}
 
-      {/* Success Message */}
+      {/* Success Message (bottom right) */}
       {successMessage && (
-        <Snackbar
-          onRemove={clearMessages}
-        >
-          {successMessage}
-        </Snackbar>
+        <SnackbarPortal message={successMessage} onRemove={clearMessages} />
       )}
 
       {/* Toolbar */}
