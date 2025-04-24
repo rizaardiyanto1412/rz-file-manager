@@ -21,7 +21,9 @@ import { fetchFiles } from '../services/api';
  * @param {number} props.level Nesting level
  * @return {JSX.Element} Rendered component
  */
-const FolderTreeItem = ({ folder, onFolderClick, currentPath, level = 0 }) => {
+import React, { memo } from 'react';
+
+const FolderTreeItem = memo(({ folder, onFolderClick, currentPath, level = 0 }) => {
   // Set Root folder to be open by default
   const isRootFolder = folder.path === '';
   const [isOpen, setIsOpen] = useState(isRootFolder);
@@ -32,7 +34,7 @@ const FolderTreeItem = ({ folder, onFolderClick, currentPath, level = 0 }) => {
   // Check if this folder is in the current path
   const isActive = currentPath === folder.path;
 
-  // Load children when folder is opened
+  // Memoized loadChildren to avoid recreation
   const loadChildren = useCallback(async () => {
     if (loaded && children.length === 0) return; // Already tried loading with no results
     if (loaded && children.length > 0) return; // Already loaded with results
@@ -62,21 +64,21 @@ const FolderTreeItem = ({ folder, onFolderClick, currentPath, level = 0 }) => {
     }
   }, [isRootFolder, loaded, loadChildren]);
 
-  // Toggle folder open/closed
-  const toggleFolder = async () => {
+  // Memoize toggleFolder to avoid inline recreation
+  const toggleFolder = useCallback(async () => {
     if (!isOpen && !loaded) {
       await loadChildren();
     }
-    setIsOpen(!isOpen);
-  };
+    setIsOpen(prev => !prev);
+  }, [isOpen, loaded, loadChildren]);
 
-  // Handle folder click
-  const handleClick = () => {
+  // Memoize handleClick to avoid inline recreation
+  const handleClick = useCallback(() => {
     onFolderClick(folder.path);
     if (!isOpen) {
       toggleFolder();
     }
-  };
+  }, [onFolderClick, folder.path, isOpen, toggleFolder]);
 
   return (
     <div className="rz-folder-tree-item">
@@ -111,7 +113,7 @@ const FolderTreeItem = ({ folder, onFolderClick, currentPath, level = 0 }) => {
               <FolderTreeItem
                 key={childFolder.path}
                 folder={childFolder}
-                onFolderClick={onFolderClick}
+                onFolderClick={onFolderClick} // Handler is memoized
                 currentPath={currentPath}
                 level={level + 1}
               />
@@ -125,7 +127,7 @@ const FolderTreeItem = ({ folder, onFolderClick, currentPath, level = 0 }) => {
       )}
     </div>
   );
-};
+});
 
 /**
  * FolderTree component
